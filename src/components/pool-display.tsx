@@ -5,18 +5,18 @@ import { BaseError, formatUnits, parseUnits } from "viem";
 import { useErc20Token } from "../hooks/erc20Token.ts";
 import { useState } from "react";
 import { waitForTransactionReceipt } from "viem/actions";
+import { useStatusMessage } from "../context/status-message.tsx";
 
 interface PoolDisplayProps {
   poolId?: bigint;
-  setErrorMessage: (msg: string | null) => void;
-  setSuccessMessage: (msg: string | null) => void;
-  clearMessages: () => void;
 }
 
-export function PoolDisplay({ poolId = 0n, setErrorMessage, setSuccessMessage, clearMessages }: PoolDisplayProps) {
+export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   const account = useAccount();
   const { writeContract } = useWriteContract();
   const publicClient = usePublicClient();
+
+  const { setErrorMessage, setSuccessMessage, clearMessages } = useStatusMessage();
 
   const [stakeAmount, setStakeAmount] = useState("");
   const [unstakeAmount, setUnstakeAmount] = useState("");

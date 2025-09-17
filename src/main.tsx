@@ -13,6 +13,7 @@ import App from "./App.tsx";
 // import './grid-styles.css'; // Import grid styles (once) - REMOVED, will link in index.html
 import { grid } from "./the-grid";
 import { isDevelopment, RPC_URL } from "./constants/config";
+import { StatusMessageProvider } from "./context/status-message.tsx";
 
 // Configure wagmi
 const supportedChains: [Chain, ...Chain[]] = isDevelopment ? [mainnet, anvil] : [mainnet];
@@ -51,7 +52,9 @@ createRoot(rootElement).render(
   <StrictMode>
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <App />
+        <StatusMessageProvider>
+          <App />
+        </StatusMessageProvider>
       </QueryClientProvider>
     </WagmiProvider>
   </StrictMode>

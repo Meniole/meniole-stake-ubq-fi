@@ -1,8 +1,8 @@
 import { injected, useAccount, useChains, useConnect, useDisconnect } from "wagmi";
 import { ICONS } from "./iconography.tsx";
-import { useState } from "react";
 import { PoolDisplay } from "./pool-display.tsx";
 import { BaseError } from "viem";
+import { useStatusMessage } from "../context/status-message.tsx";
 
 const LogoSpan = () => <span id="header-logo-wrapper">{ICONS.DAO_LOGO}</span>;
 
@@ -12,21 +12,7 @@ export function DashboardPage() {
   const { connect, status } = useConnect();
   const { disconnect } = useDisconnect();
 
-  const [errorMessage, _setErrorMessage] = useState<string | null>(null);
-  const [successMessage, _setSuccessMessage] = useState<string | null>(null);
-
-  const setSuccessMessage = (msg: string | null) => {
-    clearMessages();
-    _setSuccessMessage(msg);
-  };
-  const setErrorMessage = (msg: string | null) => {
-    clearMessages();
-    _setErrorMessage(msg);
-  };
-  const clearMessages = () => {
-    _setErrorMessage(null);
-    _setSuccessMessage(null);
-  };
+  const { successMessage, errorMessage, setErrorMessage, clearMessages } = useStatusMessage();
 
   const isWalletInstalled = typeof window !== "undefined" && !!window.ethereum;
 
@@ -99,7 +85,7 @@ export function DashboardPage() {
       {isConnected && chainId && !supportedChains.some((c) => c.id === chainId) ? (
         <div className="permits-list">Switch to one of the supported chains: {supportedChains.map((chain) => chain.name).join(", ")}</div>
       ) : (
-        <PoolDisplay setErrorMessage={setErrorMessage} setSuccessMessage={setSuccessMessage} clearMessages={clearMessages} />
+        <PoolDisplay />
       )}
     </>
   );
