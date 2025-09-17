@@ -7,8 +7,9 @@
     "wagmi": "^2.16.9"
   },
   "scripts": {
-    "dev": "bunx --bun vite",
-    "build": "vite build",
+    "local": "bunx --bun vite --mode local-node",
+    "dev": "bunx --bun vite --mode dev",
+    "build": "vite build --mode prod",
     "lint": "eslint ."
   },
   "devDependencies": {

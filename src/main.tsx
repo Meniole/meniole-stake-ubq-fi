@@ -12,18 +12,15 @@ import App from "./App.tsx";
 // import './ubiquity-styles.css'; // Import ubiquity styles - REMOVED, will link in index.html
 // import './grid-styles.css'; // Import grid styles (once) - REMOVED, will link in index.html
 import { grid } from "./the-grid";
-import { isDevelopment, RPC_URL } from "./constants/config";
+import { isLocalNode, RPC_URL } from "./constants/config";
 import { StatusMessageProvider } from "./context/status-message.tsx";
 
 // Configure wagmi
-const supportedChains: [Chain, ...Chain[]] = isDevelopment ? [mainnet, anvil] : [mainnet];
-
-// Get base RPC URL from env or use default
-const rpcBaseUrl = RPC_URL;
+const supportedChains: [Chain, ...Chain[]] = isLocalNode ? [mainnet, anvil] : [mainnet];
 
 // Dynamically create transports for all supported chains
 const transports = supportedChains.reduce((acc, chain) => {
-  acc[chain.id] = http(`http://localhost:8545`, { batch: true });
+  acc[chain.id] = http(isLocalNode ? RPC_URL : `${RPC_URL}/${chain.id}`, { batch: true });
   return acc;
 }, {} as Record<number, ReturnType<typeof http>>);
 
