@@ -141,36 +141,7 @@ footer {
   font-size: 1.3rem;
   color: var(--text);
 }
-#error-message-wrapper {
-  background-color: #030b16;
-  border: 1px solid #ffffff10;
-  text-align: center;
-  margin: 4px auto;
-  background-color: #ff000010;
-}
 
-.spinner-or-expand-container {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 4px;
-  width: 50px;
-}
-.expand-button {
-  cursor: pointer;
-  min-width: 48px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.expand-button svg.closer,
-.expand-button svg.opener {
-  fill: currentColor;
-  transition: opacity 0.3s ease-in-out;
-}
 
 .permits-list {
   transition: 0.25s all ease-in-out;
@@ -241,86 +212,7 @@ footer {
   justify-content: center;
   text-align: center;
 }
-.permit-cell.actions-cell > * {
-  margin: auto;
-}
 
-.permit-cell.monospace,
-.permit-cell.monospace > button {
-  font-family: monospace;
-  font-size: 13.3333px;
-}
-
-.permit-cell .extra-small-font {
-  font-size: 0.8em;
-}
-.permit-cell .subtle-text {
-  color: #ffffff80;
-}
-.permit-cell .margin-top-4 {
-  margin-top: 4px;
-}
-.permit-cell .bold-text {
-  font-weight: 700;
-}
-
-.permit-row.row-invalid {
-  background-color: #ffffff20;
-  opacity: 0.25;
-}
-.permit-row.row-claimed {
-  background-color: #e6ffed10;
-}
-.permit-row.row-claim-failed {
-  background-color: #ffebe910;
-}
-.permit-row.row-claiming {
-  background-color: #fff9e610;
-}
-
-.permit-row.row-warning {
-  background-color: #fffbea10;
-}
-
-.permit-cell .status-claimed {
-  color: #1a8917;
-}
-.permit-cell .status-unclaimed {
-  color: #b35f00;
-}
-.permit-cell .status-error {
-  color: var(--error);
-  font-size: 13.3333px;
-}
-.permit-cell .status-test-failed {
-  color: orange;
-}
-.permit-cell .warning-text {
-  color: orange;
-  font-size: 0.8em;
-  margin-top: 4px;
-}
-.permit-cell .status-claiming {
-  color: #b08800;
-}
-
-.permit-cell button {
-  flex-grow: 0;
-
-  width: 100%;
-}
-.permit-cell button:not([disabled]):hover {
-  opacity: 1;
-  background-color: #ffffff1a;
-}
-.permit-cell button:disabled {
-  opacity: 0.3;
-}
-
-.permit-cell .button-as-link:hover {
-  opacity: 1;
-  background: none;
-}
 
 #header-logo-wrapper svg {
   margin-right: 4px;
@@ -335,6 +227,8 @@ button {
   opacity: 0.75;
 
   justify-content: center;
+  display: inline-flex;
+  align-items: center;
 
   padding-inline: 16px;
   padding-block: 0;
@@ -481,7 +375,28 @@ button > .spinner.button-spinner {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: var(--error);
+}
+
+#error-message-wrapper {
+  border: 1px solid #ffffff10;
+  text-align: center;
+  margin: 4px auto;
+  background-color: #ff000010;
+}
+
+.success-message {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+#success-message-wrapper {
+  border: 1px solid #ffffff10;
+  text-align: center;
+  margin: 4px auto;
+  background-color: #27ff0010;
 }
 
 button#claim-all:hover:not([disabled]) {
@@ -489,7 +404,7 @@ button#claim-all:hover:not([disabled]) {
 }
 
 #header button {
-  padding: 14px 0;
+  padding: 14px;
   flex-grow: 1;
 }
 
@@ -532,97 +447,30 @@ button:hover .currency-icon {
   fill: #fff;
 }
 
-.reward-preference-selector {
-  padding: 4px;
-  cursor: pointer;
-}
-
-.reward-preference-selector > * {
-  text-align: center;
-}
-
 main#root {
   text-align: center;
-}
-
-.preferred-token-selector-button-wrapper {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background-color: #030b16;
-}
-
-.preferred-token-button {
-  background: none;
-  border: 1px solid #ffffff10;
-  padding: 11px;
-  cursor: pointer;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  color: #bfbfbf;
-  transition:
-    background-color 0.2s ease-in-out,
-    border-color 0.2s ease-in-out,
-    color 0.2s ease-in-out;
-  /* background: #000; */
-}
-
-.preferred-token-button > span {
-  font-size: 12px;
-  padding: 0 5px;
-}
-
-.preferred-token-button .currency-icon {
-  height: 24px;
-  width: 24px;
-  margin: 0;
-  fill: currentColor;
-}
-
-.preference-dropdown-container {
-  position: absolute;
-  top: 0px;
-  left: 50px;
-  width: 160px;
-  border: 1px solid #ffffff10;
-  border-radius: 4px;
-  cursor: pointer;
-  background: #06080d;
-}
-
-.preference-dropdown-container .reward-preference-selector select {
-  padding-right: 0;
-  height: 38px;
-  cursor: pointer;
-}
-
-.preference-dropdown-container:hover {
-  background-color: #111318;
 }
 
 .checkbox-cell {
   margin: 5px;
 }
 
-.permits-list .github-repo-name {
-  color: #bfbfbf;
-  margin: 0 2px;
+.max-amount {
+  font-size: 0.8em;
+  align-self: start;
 }
-.permits-list .github-issue-number {
-  color: #fff;
-  margin: 0 2px;
+
+.max-amount span {
+  cursor: pointer;
 }
-.permits-list .github-issue-number::before {
-  color: #bfbfbf;
-  font-weight: 900;
-  content: "/ ";
+
+input {
+  height: 40px;
+  padding: 10px;
+  border: 2px solid #ffffff4d;
+  border-radius: 4px;
 }
-.permits-list .github-beneficiary {
-  color: #bfbfbf;
-  margin: 0 2px;
-}
-.permits-list .github-beneficiary::before {
-  font-weight: 900;
-  content: "/ ";
+
+.action-button {
+  margin-top: 5px;
 }

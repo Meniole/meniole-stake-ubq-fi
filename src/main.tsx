@@ -6,29 +6,18 @@ import { type Chain } from "viem/chains";
 import { injected } from "@wagmi/connectors";
 import {
   mainnet, // 1
-  optimism, // 10
-  bsc, // 56
-  gnosis, // 100
-  polygon, // 137
-  zkSync, // 324
-  base, // 8453
-  arbitrum, // 42161
-  celo, // 42220
-  avalanche, // 43114
-  blast, // 81457
-  zora, // 7777777
   anvil, // 31337 (local dev chain)
 } from "wagmi/chains";
 import App from "./App.tsx";
 // import './ubiquity-styles.css'; // Import ubiquity styles - REMOVED, will link in index.html
 // import './grid-styles.css'; // Import grid styles (once) - REMOVED, will link in index.html
 import { grid } from "./the-grid";
+import { isDevelopment, RPC_URL } from "./constants/config";
 
 // Configure wagmi
-const supportedChains = [mainnet, optimism, bsc, gnosis, polygon, zkSync, base, arbitrum, celo, avalanche, blast, zora, anvil] as [Chain, ...Chain[]];
+const supportedChains: [Chain, ...Chain[]] = isDevelopment ? [mainnet, anvil] : [mainnet];
 
 // Get base RPC URL from env or use default
-import { RPC_URL } from "./constants/config";
 const rpcBaseUrl = RPC_URL;
 
 // Dynamically create transports for all supported chains
@@ -41,6 +30,9 @@ export const config = createConfig({
   chains: supportedChains,
   connectors: [injected()],
   transports: transports,
+  batch: {
+    multicall: false,
+  },
 });
 
 const queryClient = new QueryClient();

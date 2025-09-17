@@ -1,16 +1,32 @@
-import { injected, useAccount, useConnect, useDisconnect, usePublicClient, useWalletClient } from "wagmi";
+import { injected, useAccount, useChains, useConnect, useDisconnect } from "wagmi";
 import { ICONS } from "./iconography.tsx";
 import { useState } from "react";
 import { PoolDisplay } from "./pool-display.tsx";
+import { BaseError } from "viem";
 
 const LogoSpan = () => <span id="header-logo-wrapper">{ICONS.DAO_LOGO}</span>;
 
 export function DashboardPage() {
-  const { address, isConnected } = useAccount();
-  const { connect, error: connectError, status } = useConnect();
+  const { address, isConnected, chain, chainId } = useAccount();
+  const supportedChains = useChains();
+  const { connect, status } = useConnect();
   const { disconnect } = useDisconnect();
 
-  const [dataError, setDataError] = useState<string | null>(null);
+  const [errorMessage, _setErrorMessage] = useState<string | null>(null);
+  const [successMessage, _setSuccessMessage] = useState<string | null>(null);
+
+  const setSuccessMessage = (msg: string | null) => {
+    clearMessages();
+    _setSuccessMessage(msg);
+  };
+  const setErrorMessage = (msg: string | null) => {
+    clearMessages();
+    _setErrorMessage(msg);
+  };
+  const clearMessages = () => {
+    _setErrorMessage(null);
+    _setSuccessMessage(null);
+  };
 
   const isWalletInstalled = typeof window !== "undefined" && !!window.ethereum;
 
@@ -29,16 +45,32 @@ export function DashboardPage() {
         {/* Header Buttons/Controls (Directly under #header) */}
         {isConnected && address ? (
           <>
-            <button id="disconnect" onClick={() => disconnect()} className="button-with-icon">
+            <button id="disconnect" onClick={() => disconnect({}, { onSuccess: () => clearMessages() })} className="button-with-icon">
               {ICONS.DISCONNECT}
-              <span>{`${address.substring(0, 6)}...${address.substring(address.length - 4)}`}</span>
+              <span>
+                {`${address.substring(0, 6)}...${address.substring(address.length - 4)}`} {chain ? `(${chain.name})` : ""}
+              </span>
             </button>
           </>
         ) : (
           <button
             className="button-with-icon"
             disabled={!isWalletInstalled || status === "pending"}
-            onClick={() => connect({ connector: injected() })}
+            onClick={() =>
+              connect(
+                { connector: injected() },
+                {
+                  onError: (error) => {
+                    if (error instanceof BaseError) {
+                      setErrorMessage(error.shortMessage);
+                    } else {
+                      setErrorMessage(error.message);
+                    }
+                  },
+                  onSuccess: () => clearMessages(),
+                }
+              )
+            }
           >
             {!isWalletInstalled ? ICONS.WARNING : ICONS.CONNECT}
             <span>{status === "pending" ? "Connecting..." : !isWalletInstalled ? "Requires Wallet Extension" : "Connect Wallet"}</span>
@@ -46,16 +78,28 @@ export function DashboardPage() {
         )}
       </section>
 
-      <PoolDisplay />
-
-      {/* Error Displays */}
-      {dataError && (
+      {/* Status Displays */}
+      {errorMessage && (
         <section id="error-message-wrapper">
           <div className="error-message">
             {ICONS.WARNING}
-            <span>{dataError}</span>
+            <span>{errorMessage}</span>
           </div>
         </section>
+      )}
+      {successMessage && (
+        <section id="success-message-wrapper">
+          <div className="success-message">
+            {ICONS.SUCCESS}
+            <span>{successMessage}</span>
+          </div>
+        </section>
+      )}
+
+      {isConnected && chainId && !supportedChains.some((c) => c.id === chainId) ? (
+        <div className="permits-list">Switch to one of the supported chains: {supportedChains.map((chain) => chain.name).join(", ")}</div>
+      ) : (
+        <PoolDisplay setErrorMessage={setErrorMessage} setSuccessMessage={setSuccessMessage} clearMessages={clearMessages} />
       )}
     </>
   );
