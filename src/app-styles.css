@@ -471,6 +471,14 @@ input {
   border-radius: 4px;
 }
 
+input:invalid {
+  border: red solid 2px;
+}
+
+input:focus-visible {
+  outline: none;
+}
+
 .action-button {
   margin-top: 5px;
 }

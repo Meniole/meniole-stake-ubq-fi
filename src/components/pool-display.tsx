@@ -6,6 +6,7 @@ import { useErc20Token } from "../hooks/erc20Token.ts";
 import { useState } from "react";
 import { waitForTransactionReceipt } from "viem/actions";
 import { useStatusMessage } from "../context/status-message.tsx";
+import { Button } from "./button.tsx";
 
 interface PoolDisplayProps {
   poolId?: bigint;
@@ -191,33 +192,46 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
     balance.refetch();
   };
 
-  const isLoading =
+  if (
     stakingSettings.data === undefined ||
     lpTokenInfo.data === undefined ||
     rewardTokenInfo.data === undefined ||
     poolInfo.data === undefined ||
-    (account.isConnected && (userInfo.data === undefined || allowance.data === undefined || balance.data === undefined));
+    (account.isConnected && (userInfo.data === undefined || allowance.data === undefined || balance.data === undefined))
+  ) {
+    return <div className="permits-list">Loading...</div>;
+  }
 
-  if (isLoading) return <div className="permits-list">Loading...</div>;
+  const parsedStakeAmount = !Number.isNaN(Number(stakeAmount)) ? parseUnits(stakeAmount, lpTokenInfo.data.decimals) : null;
+  const parsedUnstakeAmount = !Number.isNaN(Number(unstakeAmount)) ? parseUnits(unstakeAmount, lpTokenInfo.data.decimals) : null;
 
-  const parsedStakeAmount = lpTokenInfo.data && !Number.isNaN(Number(stakeAmount)) ? parseUnits(stakeAmount, lpTokenInfo.data.decimals) : null;
-  const parsedUnstakeAmount = lpTokenInfo.data && !Number.isNaN(Number(unstakeAmount)) ? parseUnits(unstakeAmount, lpTokenInfo.data.decimals) : null;
+  const isAllowanceSufficient = allowance.data !== undefined && parsedStakeAmount !== null ? allowance.data >= parsedStakeAmount : false;
 
-  const isAllowanceSufficient =
-    lpTokenInfo.data !== undefined && allowance.data !== undefined && parsedStakeAmount !== null ? allowance.data >= parsedStakeAmount : false;
+  const rewardPerBlock = stakingSettings.data[3];
+  const poolAllocPoints = poolInfo.data.allocationPoints;
+  const totalAllocPoints = stakingSettings.data[6];
+  const blocksPerDay = 7167; // approx for 12s block time on Ethereum mainnet
+  const poolRewardPerDay =
+    totalAllocPoints > 0n
+      ? Number(formatUnits((rewardPerBlock * poolAllocPoints) / totalAllocPoints, rewardTokenInfo.data.decimals)) * blocksPerDay
+      : null;
+  const userPoolShare =
+    userInfoData?.result && poolInfo.data.amount > 0n
+      ? Number(formatUnits(userInfoData.result.amount, lpTokenInfo.data.decimals)) /
+        Number(formatUnits(poolInfo.data.amount, lpTokenInfo.data.decimals))
+      : null;
+  const userRewardPerDay = userPoolShare && poolRewardPerDay && userInfoData?.result ? userPoolShare * poolRewardPerDay : null;
 
   return (
     <div>
       <div className="permits-list" style={{ padding: "20px" }}>
-        <div style={{ fontSize: "1.1em", marginBottom: "10px" }}>{lpTokenInfo.data?.name} Pool</div>
+        <div style={{ fontSize: "1.1em", marginBottom: "10px" }}>{lpTokenInfo.data.name} Pool</div>
         <div>
-          Total Staked: {lpTokenInfo.data && poolInfo.data ? formatUnits(poolInfo.data.amount, lpTokenInfo.data?.decimals) : "-"}{" "}
-          {lpTokenInfo.data?.symbol}
+          Total Staked: {formatUnits(poolInfo.data.amount, lpTokenInfo.data.decimals)} {lpTokenInfo.data.symbol}
         </div>
         <div>
-          Your Stake:{" "}
-          {userInfoData && userInfoData.result && lpTokenInfo.data ? formatUnits(userInfoData.result.amount, lpTokenInfo.data.decimals) : "-"}{" "}
-          {lpTokenInfo.data?.symbol}
+          Your Stake: {userInfoData && userInfoData.result ? formatUnits(userInfoData.result.amount, lpTokenInfo.data.decimals) : "-"}{" "}
+          {lpTokenInfo.data.symbol} {userPoolShare && userPoolShare > 0.0001 ? `(${(userPoolShare * 100).toFixed(2)}% of pool)` : ""}
         </div>
 
         <div style={{ display: "flex", flexDirection: "row", margin: "30px 0 30px 0", justifyContent: "space-around" }}>
@@ -225,12 +239,11 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
             <div className="max-amount">
               Max:{" "}
               <span onClick={() => setStakeAmount(balance.data && lpTokenInfo.data ? formatUnits(balance.data, lpTokenInfo.data.decimals) : "")}>
-                {balance.data !== undefined && lpTokenInfo.data ? formatUnits(balance.data, lpTokenInfo.data.decimals) : "-"}{" "}
-                {lpTokenInfo.data?.symbol}
+                {balance.data !== undefined ? formatUnits(balance.data, lpTokenInfo.data.decimals) : "-"} {lpTokenInfo.data.symbol}
               </span>
             </div>
-            <input type="text" placeholder="Amount" value={stakeAmount} onChange={(e) => setStakeAmount(e.target.value)} />
-            <button
+            <input type="text" pattern="\d*\.?\d*" placeholder="Amount" value={stakeAmount} onChange={(e) => setStakeAmount(e.target.value)} />
+            <Button
               className="action-button"
               disabled={
                 !account.isConnected ||
@@ -241,17 +254,12 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
                 parsedStakeAmount > balance.data
               }
               onClick={approveAllowance}
+              isLoading={isApproving}
+              isLoadingText="Approving..."
             >
-              {isApproving ? (
-                <>
-                  <div className="spinner button-spinner"></div>
-                  <span>Approving...</span>
-                </>
-              ) : (
-                <span>Approve</span>
-              )}
-            </button>
-            <button
+              Approve
+            </Button>
+            <Button
               className="action-button"
               disabled={
                 !account.isConnected ||
@@ -262,16 +270,11 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
                 parsedStakeAmount > balance.data
               }
               onClick={stake}
+              isLoading={isStaking}
+              isLoadingText="Staking..."
             >
-              {isStaking ? (
-                <>
-                  <div className="spinner button-spinner"></div>
-                  <span>Staking...</span>
-                </>
-              ) : (
-                <span>Stake</span>
-              )}
-            </button>
+              Stake
+            </Button>
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div className="max-amount">
@@ -281,46 +284,41 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
                   setUnstakeAmount(userInfoData?.result && lpTokenInfo.data ? formatUnits(userInfoData.result.amount, lpTokenInfo.data.decimals) : "")
                 }
               >
-                {userInfoData?.result && lpTokenInfo.data ? formatUnits(userInfoData.result.amount, lpTokenInfo.data.decimals) : "-"}{" "}
-                {lpTokenInfo.data?.symbol}
+                {userInfoData?.result ? formatUnits(userInfoData.result.amount, lpTokenInfo.data.decimals) : "-"} {lpTokenInfo.data.symbol}
               </span>
             </div>
-            <input type="text" pattern="\d+(\.\d+)?" placeholder="Amount" value={unstakeAmount} onChange={(e) => setUnstakeAmount(e.target.value)} />
-            <button
+            <input type="text" pattern="\d*\.?\d*" placeholder="Amount" value={unstakeAmount} onChange={(e) => setUnstakeAmount(e.target.value)} />
+            <Button
               className="action-button"
               disabled={
                 !account.isConnected || !balance.data || !parsedUnstakeAmount || parsedUnstakeAmount <= 0 || parsedUnstakeAmount > balance.data
               }
               onClick={unstake}
+              isLoading={isUnstaking}
+              isLoadingText="Unstaking..."
             >
-              {isUnstaking ? (
-                <>
-                  <div className="spinner button-spinner"></div>
-                  <span>Unstaking...</span>
-                </>
-              ) : (
-                <span>Unstake</span>
-              )}
-            </button>
+              Unstake
+            </Button>
           </div>
         </div>
 
         <div>
           <div>
             Pending Rewards:{" "}
-            {pendingRewardsData ? Number(formatUnits(pendingRewardsData.result ?? 0n, rewardTokenInfo.data?.decimals ?? 18)).toFixed(2) : "-"}{" "}
-            {rewardTokenInfo.data?.symbol}
+            {pendingRewardsData ? Number(formatUnits(pendingRewardsData.result ?? 0n, rewardTokenInfo.data.decimals)).toFixed(2) : "-"}{" "}
+            {rewardTokenInfo.data.symbol}
           </div>
-          <button onClick={claim} disabled={!account.isConnected || (pendingRewardsData?.result ?? 0n) === 0n}>
-            {isClaiming ? (
-              <>
-                <div className="spinner button-spinner"></div>
-                <span>Claiming...</span>
-              </>
-            ) : (
-              <span>Claim Rewards</span>
-            )}
-          </button>
+          <div>
+            Reward Per Day: {userRewardPerDay !== null ? userRewardPerDay.toFixed(2) : "-"} {rewardTokenInfo.data?.symbol}
+          </div>
+          <Button
+            onClick={claim}
+            isLoading={isClaiming}
+            isLoadingText="Claiming rewards..."
+            disabled={!account.isConnected || (pendingRewardsData?.result ?? 0n) === 0n}
+          >
+            Claim Rewards
+          </Button>
         </div>
       </div>
     </div>

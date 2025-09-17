@@ -83,7 +83,9 @@ export function DashboardPage() {
       )}
 
       {isConnected && chainId && !supportedChains.some((c) => c.id === chainId) ? (
-        <div className="permits-list">Switch to one of the supported chains: {supportedChains.map((chain) => chain.name).join(", ")}</div>
+        <div className="permits-list">
+          <div style={{ padding: "20px" }}>Switch to one of the supported chains: {supportedChains.map((chain) => chain.name).join(", ")}</div>
+        </div>
       ) : (
         <PoolDisplay />
       )}
