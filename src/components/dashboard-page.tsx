@@ -67,7 +67,7 @@ export function DashboardPage() {
       {/* Status Displays */}
       {errorMessage && (
         <section id="error-message-wrapper">
-          <div className="error-message">
+          <div className="status-message">
             {ICONS.WARNING}
             <span>{errorMessage}</span>
           </div>
@@ -75,7 +75,7 @@ export function DashboardPage() {
       )}
       {successMessage && (
         <section id="success-message-wrapper">
-          <div className="success-message">
+          <div className="status-message">
             {ICONS.SUCCESS}
             <span>{successMessage}</span>
           </div>
@@ -83,7 +83,7 @@ export function DashboardPage() {
       )}
 
       {isConnected && chainId && !supportedChains.some((c) => c.id === chainId) ? (
-        <div className="permits-list">
+        <div className="pool-container">
           <div style={{ padding: "20px" }}>Switch to one of the supported chains: {supportedChains.map((chain) => chain.name).join(", ")}</div>
         </div>
       ) : (

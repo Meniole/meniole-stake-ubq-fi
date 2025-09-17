@@ -82,68 +82,8 @@ footer {
   border: 1px solid #ffffff10;
   padding: 16px 0;
 }
-.analyze-form {
-  display: flex;
-  gap: 4px;
-  margin: auto;
-}
-.url-input {
-  flex: 1;
-  padding: 0.5rem;
-  font-size: 1rem;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--bg);
-  color: var(--text);
-  text-align: center;
-}
-.url-input:focus {
-  outline: 0;
-  border-color: var(--primary);
-}
-.analyze-btn {
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.analyze-btn:hover {
-  opacity: 0.9;
-}
-.content-columns {
-  display: flex;
-  overflow-x: auto;
-  width: 100%;
-  max-width: 100%;
-  padding: 0;
-  gap: 0;
-  box-sizing: border-box;
-  justify-content: flex-start;
-  position: relative;
-  left: 0;
-}
-.column {
-  border-radius: 4px;
-  flex: 0 0 auto;
-  max-width: 638px;
-  min-width: 280px;
-}
-.issue-column {
-  margin-right: 4px;
-}
-.column h2 {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
-  font-size: 1.3rem;
-  color: var(--text);
-}
 
-
-.permits-list {
+.pool-container {
   transition: 0.25s all ease-in-out;
   width: calc(100vw - 8px);
   max-width: 640px;
@@ -156,63 +96,13 @@ footer {
   display: flex;
   flex-direction: column;
   border-radius: 4px;
+  padding: 20px;
 }
 
-.permits-header {
-  display: flex;
-  font-weight: 700;
-  border-bottom: 1px solid #ffffff10;
-  background-color: #ffffff05;
-  color: #bfbfbf;
+.pool-title {
+  font-size: 1.1em;
+  margin-bottom: 10px;
 }
-
-.permits-body {
-  display: flex;
-  flex-direction: column;
-}
-
-.permit-row {
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid #ffffff10;
-  transition: background-color 0.2s ease-in-out;
-}
-.permit-row:last-child {
-  border-bottom: none;
-}
-.permit-row:hover {
-  background-color: #ffffff08;
-}
-
-.header-cell,
-.permit-cell {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.permit-row:hover .permit-cell {
-  color: #fff;
-}
-
-.header-cell.source-header,
-.permit-cell.github-comment-url {
-  flex: 2;
-}
-
-.header-cell.reward-header,
-.permit-cell.align-right {
-  flex: 1;
-  justify-content: flex-end;
-  text-align: right;
-}
-
-.header-cell.actions-header,
-.permit-cell.actions-cell {
-  flex: 1;
-  justify-content: center;
-  text-align: center;
-}
-
 
 #header-logo-wrapper svg {
   margin-right: 4px;
@@ -221,6 +111,7 @@ footer {
   width: 24px;
   vertical-align: middle;
 }
+
 button {
   cursor: pointer;
   border-radius: 4px;
@@ -251,20 +142,30 @@ button {
     background-color 0.2s ease-in-out,
     color 0.2s ease-in-out;
 }
+
 button:not([disabled]):hover {
   opacity: 1;
   background-color: #ffffff08;
   color: #fff;
 }
+
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+button > .spinner.button-spinner {
+  margin-right: 12px;
 }
 
 .button-with-icon {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+.button-with-icon > svg {
+  margin-right: 2px;
+  fill: currentColor;
 }
 
 h1 > span {
@@ -284,21 +185,7 @@ h1:hover > #header-logo-wrapper > svg > path {
 svg {
   vertical-align: middle;
 }
-.error-message > span {
-  vertical-align: middle;
-}
 
-#wallet-address {
-  padding: 8px;
-  opacity: 0.75;
-}
-#wallet-address:hover {
-  opacity: 1;
-}
-#wallet-address > * {
-  vertical-align: middle;
-  font-family: monospace;
-}
 #header {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -328,53 +215,27 @@ svg {
   white-space: nowrap;
 }
 
-#claim-summary {
-  display: flex;
-  background: 0 0;
-  backdrop-filter: none;
-  border: none;
-  box-shadow: none;
-}
-#claim-summary h2 {
-  margin: auto;
-  letter-spacing: 2px;
-  font-size: 36px;
-  font-weight: 100;
-  text-rendering: geometricPrecision;
-}
-#claim-summary > * {
-  display: inline-flex;
+#header button {
+  padding: 14px;
   flex-grow: 1;
-  align-items: center;
-  padding: 24px;
-  white-space: normal;
-  word-wrap: break-word;
-  word-break: break-word;
-  font-family: monospace;
-  font-size: 24px;
 }
-button.claim-all-button.button-with-icon > svg {
-  height: 36px;
-  width: 36px;
-  margin-right: 8px;
+#header.header-logged-out * {
+  display: flex;
+  flex-grow: unset;
 }
-#claim-summary button * {
-  font-family: monospace;
-}
-button > .spinner.button-spinner {
-  margin-right: 12px;
-}
-.button-with-icon > svg {
-  margin-right: 2px;
-  fill: currentColor;
+#header.header-logged-out {
+  justify-content: space-evenly;
 }
 
-.error-message {
+.status-message {
   padding: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+.status-message > span {
+  vertical-align: middle;
 }
 
 #error-message-wrapper {
@@ -384,14 +245,6 @@ button > .spinner.button-spinner {
   background-color: #ff000010;
 }
 
-.success-message {
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
 #success-message-wrapper {
   border: 1px solid #ffffff10;
   text-align: center;
@@ -399,60 +252,9 @@ button > .spinner.button-spinner {
   background-color: #27ff0010;
 }
 
-button#claim-all:hover:not([disabled]) {
-  opacity: 1 !important;
-}
-
-#header button {
-  padding: 14px;
-  flex-grow: 1;
-}
-
-#header.header-logged-out * {
-  display: flex;
-  flex-grow: unset;
-}
-#header.header-logged-out {
-  justify-content: space-evenly;
-}
-
-.claim-count::before {
-  content: " ";
-}
-
-.github-comment-url > button.button-as-link {
-  text-align: left;
-}
-
-button.button-as-link.monospace {
-  text-align: right;
-}
-
-.currency-icon {
-  height: 18px;
-  width: 18px;
-  margin-right: 10px;
-  vertical-align: middle;
-  display: inline-block;
-  margin-bottom: 2.5px;
-  fill: #bfbfbf;
-
-  transition:
-    fill 0.2s ease-in-out,
-    background-color 0.2s ease-in-out,
-    color 0.2s ease-in-out;
-}
-
-button:hover .currency-icon {
-  fill: #fff;
-}
 
 main#root {
   text-align: center;
-}
-
-.checkbox-cell {
-  margin: 5px;
 }
 
 .max-amount {
@@ -481,4 +283,16 @@ input:focus-visible {
 
 .action-button {
   margin-top: 5px;
+}
+
+.stake-row-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  margin: 30px 0 30px 0;
+}
+
+.column-container {
+  display: flex;
+  flex-direction: column;
 }

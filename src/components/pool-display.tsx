@@ -224,8 +224,8 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
 
   return (
     <div>
-      <div className="permits-list" style={{ padding: "20px" }}>
-        <div style={{ fontSize: "1.1em", marginBottom: "10px" }}>{lpTokenInfo.data.name} Pool</div>
+      <div className="pool-container">
+        <div className="pool-title">{lpTokenInfo.data.name} Pool</div>
         <div>
           Total Staked: {formatUnits(poolInfo.data.amount, lpTokenInfo.data.decimals)} {lpTokenInfo.data.symbol}
         </div>
@@ -234,8 +234,8 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
           {lpTokenInfo.data.symbol} {userPoolShare && userPoolShare > 0.0001 ? `(${(userPoolShare * 100).toFixed(2)}% of pool)` : ""}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "row", margin: "30px 0 30px 0", justifyContent: "space-around" }}>
-          <div style={{ display: "flex", flexDirection: "column" }}>
+        <div className="stake-row-container">
+          <div className="column-container">
             <div className="max-amount">
               Max:{" "}
               <span onClick={() => setStakeAmount(balance.data && lpTokenInfo.data ? formatUnits(balance.data, lpTokenInfo.data.decimals) : "")}>
@@ -276,7 +276,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
               Stake
             </Button>
           </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div className="column-container">
             <div className="max-amount">
               Max:{" "}
               <span
