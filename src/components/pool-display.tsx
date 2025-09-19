@@ -1,4 +1,4 @@
-import { useAccount, usePublicClient, useReadContract, useReadContracts, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useReadContract, useWriteContract } from "wagmi";
 import erc20Abi from "../abis/erc20.ts";
 import { stakingContract } from "../constants/contracts.ts";
 import { BaseError, formatUnits, parseUnits } from "viem";
@@ -41,25 +41,22 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   const rewardTokenAddress = stakingSettings.data?.[0];
   const rewardTokenInfo = useErc20Token(rewardTokenAddress);
 
-  const userInfo = useReadContracts({
-    contracts: [
-      {
-        ...stakingContract,
-        functionName: "getStakingUserInfo",
-        args: [poolId, account.address ?? "0x0"],
-      },
-      {
-        ...stakingContract,
-        functionName: "getPendingStakingRewards",
-        args: [poolId, account.address ?? "0x0"],
-      },
-    ],
+  const userInfo = useReadContract({
+    ...stakingContract,
+    functionName: "getStakingUserInfo",
+    args: [poolId, account.address ?? "0x0"],
     query: {
       enabled: account.isConnected && !!account.address,
     },
   });
-  const userInfoData = userInfo.data?.[0];
-  const pendingRewardsData = userInfo.data?.[1];
+  const pendingRewards = useReadContract({
+    ...stakingContract,
+    functionName: "getPendingStakingRewards",
+    args: [poolId, account.address ?? "0x0"],
+    query: {
+      enabled: account.isConnected && !!account.address,
+    },
+  });
 
   const allowance = useReadContract({
     abi: erc20Abi,
@@ -188,6 +185,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   const refreshData = () => {
     poolInfo.refetch();
     userInfo.refetch();
+    pendingRewards.refetch();
     allowance.refetch();
     balance.refetch();
   };
@@ -197,7 +195,8 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
     lpTokenInfo.data === undefined ||
     rewardTokenInfo.data === undefined ||
     poolInfo.data === undefined ||
-    (account.isConnected && (userInfo.data === undefined || allowance.data === undefined || balance.data === undefined))
+    (account.isConnected &&
+      (pendingRewards.data === undefined || userInfo.data === undefined || allowance.data === undefined || balance.data === undefined))
   ) {
     return <div className="permits-list">Loading...</div>;
   }
@@ -216,11 +215,10 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
       ? Number(formatUnits((rewardPerBlock * poolAllocPoints) / totalAllocPoints, rewardTokenInfo.data.decimals)) * blocksPerDay
       : null;
   const userPoolShare =
-    userInfoData?.result && poolInfo.data.amount > 0n
-      ? Number(formatUnits(userInfoData.result.amount, lpTokenInfo.data.decimals)) /
-        Number(formatUnits(poolInfo.data.amount, lpTokenInfo.data.decimals))
+    userInfo.data && poolInfo.data.amount > 0n
+      ? Number(formatUnits(userInfo.data.amount, lpTokenInfo.data.decimals)) / Number(formatUnits(poolInfo.data.amount, lpTokenInfo.data.decimals))
       : null;
-  const userRewardPerDay = userPoolShare && poolRewardPerDay && userInfoData?.result ? userPoolShare * poolRewardPerDay : null;
+  const userRewardPerDay = userPoolShare && poolRewardPerDay && userInfo.data ? userPoolShare * poolRewardPerDay : null;
 
   return (
     <div>
@@ -230,8 +228,8 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
           Total Staked: {formatUnits(poolInfo.data.amount, lpTokenInfo.data.decimals)} {lpTokenInfo.data.symbol}
         </div>
         <div>
-          Your Stake: {userInfoData && userInfoData.result ? formatUnits(userInfoData.result.amount, lpTokenInfo.data.decimals) : "-"}{" "}
-          {lpTokenInfo.data.symbol} {userPoolShare && userPoolShare > 0.0001 ? `(${(userPoolShare * 100).toFixed(2)}% of pool)` : ""}
+          Your Stake: {userInfo.data ? formatUnits(userInfo.data.amount, lpTokenInfo.data.decimals) : "-"} {lpTokenInfo.data.symbol}{" "}
+          {userPoolShare && userPoolShare > 0.0001 ? `(${(userPoolShare * 100).toFixed(2)}% of pool)` : ""}
         </div>
 
         <div className="stake-row-container">
@@ -263,7 +261,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
               className="action-button"
               disabled={
                 !account.isConnected ||
-                !balance.data ||
+                balance.data === undefined ||
                 !isAllowanceSufficient ||
                 !parsedStakeAmount ||
                 parsedStakeAmount <= 0 ||
@@ -281,17 +279,22 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
               Max:{" "}
               <span
                 onClick={() =>
-                  setUnstakeAmount(userInfoData?.result && lpTokenInfo.data ? formatUnits(userInfoData.result.amount, lpTokenInfo.data.decimals) : "")
+                  setUnstakeAmount(userInfo.data && lpTokenInfo.data ? formatUnits(userInfo.data.amount, lpTokenInfo.data.decimals) : "")
                 }
               >
-                {userInfoData?.result ? formatUnits(userInfoData.result.amount, lpTokenInfo.data.decimals) : "-"} {lpTokenInfo.data.symbol}
+                {userInfo.data ? formatUnits(userInfo.data.amount, lpTokenInfo.data.decimals) : "-"} {lpTokenInfo.data.symbol}
               </span>
             </div>
             <input type="text" pattern="\d*\.?\d*" placeholder="Amount" value={unstakeAmount} onChange={(e) => setUnstakeAmount(e.target.value)} />
             <Button
               className="action-button"
               disabled={
-                !account.isConnected || !balance.data || !parsedUnstakeAmount || parsedUnstakeAmount <= 0 || parsedUnstakeAmount > balance.data
+                !account.isConnected ||
+                !userInfo.data ||
+                balance.data === undefined ||
+                !parsedUnstakeAmount ||
+                parsedUnstakeAmount <= 0 ||
+                parsedUnstakeAmount > userInfo.data.amount
               }
               onClick={unstake}
               isLoading={isUnstaking}
@@ -305,18 +308,13 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
         <div>
           <div>
             Pending Rewards:{" "}
-            {pendingRewardsData ? Number(formatUnits(pendingRewardsData.result ?? 0n, rewardTokenInfo.data.decimals)).toFixed(2) : "-"}{" "}
+            {pendingRewards.data !== undefined ? Number(formatUnits(pendingRewards.data, rewardTokenInfo.data.decimals)).toFixed(2) : "-"}{" "}
             {rewardTokenInfo.data.symbol}
           </div>
           <div>
             Reward Per Day: {userRewardPerDay !== null ? userRewardPerDay.toFixed(2) : "-"} {rewardTokenInfo.data?.symbol}
           </div>
-          <Button
-            onClick={claim}
-            isLoading={isClaiming}
-            isLoadingText="Claiming rewards..."
-            disabled={!account.isConnected || (pendingRewardsData?.result ?? 0n) === 0n}
-          >
+          <Button onClick={claim} isLoading={isClaiming} isLoadingText="Claiming rewards..." disabled={!account.isConnected || !pendingRewards.data}>
             Claim Rewards
           </Button>
         </div>
