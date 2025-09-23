@@ -1,4 +1,7 @@
 {
+  "name": "stake.ubq.fi",
+  "version": "1.0.0",
+  "type": "module",
   "dependencies": {
     "@tanstack/react-query": "^5.85.9",
     "react": "^19.1.1",
