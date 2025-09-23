@@ -198,7 +198,14 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
     (account.isConnected &&
       (pendingRewards.data === undefined || userInfo.data === undefined || allowance.data === undefined || balance.data === undefined))
   ) {
-    return <div className="permits-list">Loading...</div>;
+    return (
+      <div className="pool-container">
+        <div className="loading-container">
+          <div className="spinner button-spinner"></div>
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   const parsedStakeAmount = !Number.isNaN(Number(stakeAmount)) ? parseUnits(stakeAmount, lpTokenInfo.data.decimals) : null;
@@ -219,6 +226,8 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
       ? Number(formatUnits(userInfo.data.amount, lpTokenInfo.data.decimals)) / Number(formatUnits(poolInfo.data.amount, lpTokenInfo.data.decimals))
       : null;
   const userRewardPerDay = userPoolShare && poolRewardPerDay && userInfo.data ? userPoolShare * poolRewardPerDay : null;
+
+  const isWritingContract = isApproving || isStaking || isUnstaking || isClaiming;
 
   return (
     <div>
@@ -244,6 +253,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
             <Button
               className="action-button"
               disabled={
+                isWritingContract ||
                 !account.isConnected ||
                 balance.data === undefined ||
                 isAllowanceSufficient ||
@@ -260,6 +270,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
             <Button
               className="action-button"
               disabled={
+                isWritingContract ||
                 !account.isConnected ||
                 balance.data === undefined ||
                 !isAllowanceSufficient ||
@@ -289,6 +300,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
             <Button
               className="action-button"
               disabled={
+                isWritingContract ||
                 !account.isConnected ||
                 !userInfo.data ||
                 balance.data === undefined ||
@@ -314,7 +326,13 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
           <div>
             Reward Per Day: {userRewardPerDay !== null ? userRewardPerDay.toFixed(2) : "-"} {rewardTokenInfo.data?.symbol}
           </div>
-          <Button onClick={claim} isLoading={isClaiming} isLoadingText="Claiming rewards..." disabled={!account.isConnected || !pendingRewards.data}>
+          <Button
+            className="action-button"
+            onClick={claim}
+            isLoading={isClaiming}
+            isLoadingText="Claiming rewards..."
+            disabled={isWritingContract || !account.isConnected || !pendingRewards.data}
+          >
             Claim Rewards
           </Button>
         </div>
