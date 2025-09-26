@@ -4,13 +4,8 @@ import { createRoot } from "react-dom/client";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { type Chain } from "viem/chains";
 import { injected } from "@wagmi/connectors";
-import {
-  mainnet, // 1
-  anvil, // 31337 (local dev chain)
-} from "wagmi/chains";
+import { mainnet, anvil } from "wagmi/chains";
 import App from "./App.tsx";
-// import './ubiquity-styles.css'; // Import ubiquity styles - REMOVED, will link in index.html
-// import './grid-styles.css'; // Import grid styles (once) - REMOVED, will link in index.html
 import { grid } from "./the-grid";
 import { isLocalNode, RPC_URL } from "./constants/config";
 import { StatusMessageProvider } from "./context/status-message.tsx";
