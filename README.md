@@ -51,7 +51,8 @@ You can substitute another mainnet RPC URL if needed (Alchemy / Infura / custom)
 In another terminal at the root of `ubiquity-dollar`:
 
 ```bash
-./packages/contracts/migrations/mainnet/deploy-qa.sh
+cd ./packages/contracts/
+./migrations/mainnet/deploy-qa.sh
 ```
 
 This deploys the required staking-related contracts to your forked chain.
