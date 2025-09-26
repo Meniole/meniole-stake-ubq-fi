@@ -191,6 +191,16 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   };
 
   if (
+    stakingSettings.error ||
+    lpTokenInfo.error ||
+    rewardTokenInfo.error ||
+    poolInfo.error ||
+    (account.isConnected && (pendingRewards.error || userInfo.error || allowance.error || balance.error))
+  ) {
+    return <div className="pool-container">Loading failed...</div>;
+  }
+
+  if (
     stakingSettings.data === undefined ||
     lpTokenInfo.data === undefined ||
     rewardTokenInfo.data === undefined ||
