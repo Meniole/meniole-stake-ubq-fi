@@ -7,7 +7,7 @@ Staking frontend for the Ubiquity protocol. Built with React, Vite, wagmi, viem,
 Prerequisites: Bun (<https://bun.sh>) and an injected wallet extension.
 
 ```bash
-git clone https://github.com/ubiquity-whilefoo/stake.ubq.fi.git
+git clone https://github.com/ubiquity/stake.ubq.fi.git
 cd stake.ubq.fi
 bun install
 
@@ -51,8 +51,11 @@ You can substitute another mainnet RPC URL if needed (Alchemy / Infura / custom)
 In another terminal at the root of `ubiquity-dollar`:
 
 ```bash
+yarn
 cd ./packages/contracts/
-./migrations/mainnet/deploy-qa.sh
+cp .env.example .env
+yarn run build
+yarn run deploy:mainnet:qa
 ```
 
 This deploys the required staking-related contracts to your forked chain.
