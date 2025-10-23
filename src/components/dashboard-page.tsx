@@ -1,4 +1,3 @@
-// src/components/dashboard-page.tsx
 import { useAppKitAccount, useAppKitNetwork } from "@reown/appkit/react";
 import { ICONS } from "./iconography.tsx";
 import { PoolDisplay } from "./pool-display.tsx";
@@ -23,7 +22,7 @@ export function DashboardPage() {
           <h1>
             <LogoSpan />
             <span>Ubiquity</span>
-            <span>Stake</span>
+            <span>Staking</span>
           </h1>
         </div>
 

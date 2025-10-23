@@ -304,12 +304,6 @@ input:focus-visible {
   gap: 12px;
 }
 
-/* Reown AppKit Modal Customization */
-w3m-modal,
-wcm-modal {
-  z-index: 9999;
-}
-
 w3m-modal::part(overlay),
 wcm-modal::part(overlay) {
   backdrop-filter: blur(4px);

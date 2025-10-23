@@ -2,7 +2,7 @@ import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { mainnet, type Chain } from "viem/chains";
 import { isLocalNode, RPC_URL } from "../constants/config";
-import { http, createConfig } from "wagmi";
+import { http, createConfig, type Transport } from "wagmi";
 import { injected } from "wagmi/connectors";
 
 // Custom Anvil chain with proper configuration
@@ -36,12 +36,12 @@ if (!isWalletConnectConfigured && import.meta.env.DEV) {
 }
 
 // Supported chains based on mode
-const supportedChains: [Chain, ...Chain[]] = isLocalNode 
+export const supportedChains: readonly [Chain, ...Chain[]] = isLocalNode 
   ? [mainnet, anvilChain] 
   : [mainnet];
 
 const metadata = {
-  name: "Ubiquity Stake",
+  name: "Ubiquity Staking",
   description: "Staking frontend for the Ubiquity protocol",
   url: typeof window !== "undefined" ? window.location.origin : "https://stake.ubq.fi",
   icons: [
@@ -49,20 +49,23 @@ const metadata = {
       ? `${window.location.origin}/src/assets/ubiquity-dao-logo.svg` 
       : "https://stake.ubq.fi/src/assets/ubiquity-dao-logo.svg"
   ],
-};
+} as const;
 
-// Create transports for wagmi
-const transports = supportedChains.reduce((acc, chain) => {
+// Create transports for wagmi with proper typing
+type ChainId = typeof supportedChains[number]['id'];
+type TransportsMap = Record<ChainId, Transport>;
+
+const transports = supportedChains.reduce<TransportsMap>((acc, chain) => {
   const rpcUrl = isLocalNode && chain.id === 31337 
     ? RPC_URL 
     : `${RPC_URL}/${chain.id}`;
   
-  acc[chain.id] = http(rpcUrl, { 
+  acc[chain.id as ChainId] = http(rpcUrl, { 
     batch: true,
     timeout: 30_000,
   });
   return acc;
-}, {} as Record<number, ReturnType<typeof http>>);
+}, {} as TransportsMap);
 
 // Create wagmi config (single source of truth)
 export const wagmiConfig = createConfig({
@@ -77,11 +80,17 @@ export const wagmiConfig = createConfig({
   ssr: false,
 });
 
-// Reown configuration
+// Reown configuration 
 let appKit: ReturnType<typeof createAppKit> | null = null;
 let wagmiAdapter: WagmiAdapter | null = null;
 
-export function initializeAppKit() {
+// Type for initialization result
+interface InitializationResult {
+  appKit: ReturnType<typeof createAppKit> | null;
+  wagmiAdapter: WagmiAdapter | null;
+}
+
+export function initializeAppKit(): InitializationResult {
   // Don't initialize if already done
   if (appKit) {
     return { appKit, wagmiAdapter };
@@ -94,9 +103,11 @@ export function initializeAppKit() {
   }
 
   try {
-    // Create WagmiAdapter
+    // Create WagmiAdapter instance
+    // Note: WagmiAdapter expects a specific chain type that may differ from viem's Chain
+    // We need to cast here because the library's type definition may be more restrictive
     wagmiAdapter = new WagmiAdapter({
-      networks: supportedChains as any,
+      networks: supportedChains as unknown as WagmiAdapter["networks"],
       projectId,
       ssr: false,
     });
@@ -104,7 +115,7 @@ export function initializeAppKit() {
     // Create AppKit with lazy loading
     appKit = createAppKit({
       adapters: [wagmiAdapter],
-      networks: supportedChains as any,
+      networks: supportedChains as unknown as Parameters<typeof createAppKit>[0]["networks"],
       projectId,
       metadata,
       features: {
@@ -123,6 +134,9 @@ export function initializeAppKit() {
       // Enable network switching with user confirmation
       enableNetworkView: true,
       enableAccountView: true,
+      elements: {  
+        modal: 'modal-root'
+      }
     });
 
     console.log("✅ Reown AppKit initialized successfully");
@@ -133,13 +147,11 @@ export function initializeAppKit() {
   }
 }
 
-
+// Initialize on client side
 if (typeof window !== "undefined") {
   initializeAppKit();
 }
 
-export function getAppKit() {
+export function getAppKit(): ReturnType<typeof createAppKit> | null {
   return appKit;
 }
-
-export { supportedChains };

@@ -1,4 +1,3 @@
-// src/components/connect-wallet.tsx
 import { useAppKit, useAppKitAccount, useAppKitNetwork } from "@reown/appkit/react";
 import { isWalletConnectConfigured, supportedChains } from "../wallet/config";
 import { ICONS } from "./iconography";
@@ -36,7 +35,11 @@ export function ConnectWalletButton() {
 
   if (!isWalletConnectConfigured) {
     return (
-      <button className="button-with-icon" disabled title="WalletConnect not configured. Add VITE_WALLETCONNECT_PROJECT_ID to .env">
+      <button 
+        className="wallet-button wallet-button--error" 
+        disabled 
+        title="WalletConnect not configured. Add VITE_WALLETCONNECT_PROJECT_ID to .env"
+      >
         {ICONS.WARNING}
         <span>WalletConnect not configured</span>
       </button>
@@ -63,13 +66,12 @@ export function ConnectWalletButton() {
     const truncatedAddress = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 
     return (
-      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+      <div className="wallet-connect-container">
         {isUnsupportedChain && (
           <button 
-            className="button-with-icon" 
+            className="wallet-button wallet-button--warning" 
             onClick={handleNetworkSwitch}
             disabled={isSwitchingNetwork}
-            style={{ backgroundColor: "#ff444420" }}
           >
             {ICONS.WARNING}
             <span>{isSwitchingNetwork ? "Switching..." : "Switch Network"}</span>
@@ -78,7 +80,7 @@ export function ConnectWalletButton() {
         <button 
           id="disconnect" 
           onClick={() => open()} 
-          className="button-with-icon"
+          className="wallet-button wallet-button--connected"
           title="Click to manage wallet"
         >
           {ICONS.DISCONNECT}
@@ -92,7 +94,7 @@ export function ConnectWalletButton() {
 
   return (
     <button 
-      className="button-with-icon" 
+      className="wallet-button" 
       disabled={status === "connecting"} 
       onClick={() => open()}
       title={status === "connecting" ? "Connecting to wallet..." : "Connect your wallet"}
