@@ -91,7 +91,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
     try {
       const receipt = await waitForTransactionReceipt(publicClient, { 
         hash,
-        timeout: 60_000,
+        timeout: 15_000,
       });
       
       if (receipt.status === "success") {
