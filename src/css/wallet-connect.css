@@ -4,19 +4,18 @@
   align-items: center;
 }
 
-
 .wallet-button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
-  border: 1px solid #ffffff20;
+  padding: 0 16px;
+  border: none;
   border-radius: 4px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background-color: #030b16;
+  transition: opacity 0.2s ease-in-out, background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  background-color: transparent;
   color: #bfbfbf;
   font-family: "Ubiquity Nova", sans-serif;
   opacity: 0.75;
@@ -30,12 +29,6 @@
   opacity: 1;
   background-color: #ffffff08;
   color: #fff;
-  border-color: #ffffff40;
-  transform: translateY(-1px);
-}
-
-.wallet-button:active:not(:disabled) {
-  transform: translateY(0);
 }
 
 .wallet-button:disabled {
@@ -43,58 +36,10 @@
   cursor: not-allowed;
 }
 
-
-.wallet-button--connected {
-  background-color: #00aa5520;
-  color: #00aa55;
-  border-color: #00aa5540;
-  opacity: 0.9;
-}
-
-.wallet-button--connected:hover:not(:disabled) {
-  background-color: #00aa5530;
-  color: #00ff88;
-  border-color: #00aa5560;
-  opacity: 1;
-}
-
-
-.wallet-button--warning {
-  background-color: #ff444420;
-  color: #ff4444;
-  border: 1px solid #ff444440;
-  opacity: 0.9;
-}
-
-.wallet-button--warning:hover:not(:disabled) {
-  background-color: #ff444430;
-  color: #ff6666;
-  border-color: #ff444460;
-  opacity: 1;
-}
-
-
 .wallet-button--error {
-  background-color: #6c757d30;
-  color: #bfbfbf;
-  border: 1px solid #6c757d40;
+  opacity: 0.5;
   cursor: not-allowed;
-  opacity: 0.6;
 }
-
-
-.wallet-button--disconnect {
-  background-color: #ff444420;
-  color: #ff4444;
-  border: 1px solid #ff444440;
-}
-
-.wallet-button--disconnect:hover:not(:disabled) {
-  background-color: #ff444430;
-  color: #ff6666;
-  border-color: #ff444460;
-}
-
 
 .wallet-button svg {
   width: 18px;
@@ -102,7 +47,6 @@
   flex-shrink: 0;
   fill: currentColor;
 }
-
 
 .wallet-address {
   font-family: "Ubiquity Nova", sans-serif;
@@ -113,7 +57,6 @@
   border-radius: 4px;
   border: 1px solid #ffffff20;
 }
-
 
 .network-indicator {
   display: inline-flex;
@@ -133,7 +76,6 @@
   border-color: #ff444440;
 }
 
-
 .wallet-balance {
   font-family: "Ubiquity Nova", sans-serif;
   font-size: 14px;
@@ -148,13 +90,13 @@
     width: 100%;
     gap: 8px;
   }
-
+  
   .wallet-button {
     width: 100%;
     justify-content: center;
     padding: 12px 16px;
   }
-
+  
   .wallet-address {
     font-size: 11px;
     text-align: center;
@@ -173,17 +115,6 @@
     width: 16px;
     height: 16px;
   }
-}
-
-/* Animation for wallet connection state changes */
-@keyframes walletPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
-}
-
-.wallet-button--connected {
-  animation: walletPulse 0.6s ease;
 }
 
 /* Custom styles for Reown AppKit modal to match theme */

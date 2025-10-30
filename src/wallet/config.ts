@@ -72,11 +72,6 @@ export const wagmiConfig = createConfig({
   chains: supportedChains,
   connectors: [injected()],
   transports,
-  batch: {
-    multicall: {
-      wait: 50,
-    },
-  },
   ssr: false,
 });
 
@@ -138,9 +133,7 @@ export function initializeAppKit(): InitializationResult {
         modal: 'modal-root'
       }
     });
-
-    console.log("✅ Reown AppKit initialized successfully");
-    return { appKit, wagmiAdapter };
+    console.log("✅ Reown AppKit initialized successfully");    
   } catch (error) {
     console.error("❌ Failed to initialize Reown AppKit:", error);
     return { appKit: null, wagmiAdapter: null };
