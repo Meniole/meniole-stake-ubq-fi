@@ -11,46 +11,11 @@ const useWalletStateCleanup = (clearMessages: () => void) => {
   const prevStateRef = useRef({ isConnected, chainId });
 
   useEffect(() => {
-    const hasChanged = prevStateRef.current.isConnected !== isConnected || prevStateRef.current.chainId !== chainId;
-
-    if (hasChanged) {
+    if (prevStateRef.current.isConnected !== isConnected || prevStateRef.current.chainId !== chainId) {
       clearMessages();
       prevStateRef.current = { isConnected, chainId };
     }
   }, [isConnected, chainId, clearMessages]);
-};
-
-interface ConnectedButtonProps {
-  address: string;
-  chainName: string;
-  onClick: () => void;
-}
-
-const ConnectedButton = ({ address, chainName, onClick }: ConnectedButtonProps) => (
-  <div className="wallet-connect-container">
-    <button id="disconnect" onClick={onClick} className="wallet-button wallet-button--connected" title="Click to manage wallet">
-      {ICONS.DISCONNECT}
-      <span>
-        {formatWalletAddress(address)} ({chainName})
-      </span>
-    </button>
-  </div>
-);
-
-interface DisconnectedButtonProps {
-  status: string;
-  onClick: () => void;
-}
-
-const DisconnectedButton = ({ status, onClick }: DisconnectedButtonProps) => {
-  const isConnecting = status === "connecting";
-
-  return (
-    <button className="wallet-button" disabled={isConnecting} onClick={onClick} title={isConnecting ? "Connecting to wallet..." : "Connect your wallet"}>
-      {ICONS.CONNECT}
-      <span>{isConnecting ? "Connecting..." : "Connect Wallet"}</span>
-    </button>
-  );
 };
 
 export function ConnectWalletButton() {
@@ -61,9 +26,29 @@ export function ConnectWalletButton() {
 
   useWalletStateCleanup(clearMessages);
 
+  const buttonProps = {
+    onClick: () => open(),
+    className: `wallet-button ${isConnected ? "wallet-button--connected" : ""}`,
+  };
+
   if (isConnected && address) {
-    return <ConnectedButton address={address} chainName={getChainName(chainId, supportedChains)} onClick={() => open()} />;
+    return (
+      <div className="wallet-connect-container">
+        <button {...buttonProps} id="disconnect" title="Click to manage wallet">
+          {ICONS.DISCONNECT}
+          <span>
+            {formatWalletAddress(address)} ({getChainName(chainId, supportedChains)})
+          </span>
+        </button>
+      </div>
+    );
   }
 
-  return <DisconnectedButton status={status ?? "disconnected"} onClick={() => open()} />;
+  const isConnecting = status === "connecting";
+  return (
+    <button {...buttonProps} disabled={isConnecting} title={isConnecting ? "Connecting to wallet..." : "Connect your wallet"}>
+      {ICONS.CONNECT}
+      <span>{isConnecting ? "Connecting..." : "Connect Wallet"}</span>
+    </button>
+  );
 }

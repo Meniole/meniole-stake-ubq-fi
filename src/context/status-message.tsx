@@ -1,9 +1,4 @@
-import { createContext, useContext, useReducer, useMemo } from "react";
-
-type StatusMessage = {
-  successMessage: string | null;
-  errorMessage: string | null;
-};
+import { createContext, useContext, useState, useCallback, useMemo } from "react";
 
 type StatusMessageContext = {
   successMessage: string | null;
@@ -13,8 +8,6 @@ type StatusMessageContext = {
   clearMessages: () => void;
 };
 
-type StatusMessageAction = { type: "setSuccess"; message: string | null } | { type: "setError"; message: string | null } | { type: "clear" };
-
 const StatusMessageContext = createContext<StatusMessageContext>({
   successMessage: null,
   errorMessage: null,
@@ -23,42 +16,31 @@ const StatusMessageContext = createContext<StatusMessageContext>({
   clearMessages: () => {},
 });
 
-export const useStatusMessage = () => {
-  return useContext(StatusMessageContext);
-};
+export const useStatusMessage = () => useContext(StatusMessageContext);
 
 export function StatusMessageProvider({ children }: { children: React.ReactNode }) {
-  const [statusMessage, dispatch] = useReducer(statusMessageReducer, {
-    successMessage: null,
-    errorMessage: null,
-  });
+  const [successMessage, setSuccess] = useState<string | null>(null);
+  const [errorMessage, setError] = useState<string | null>(null);
+
+  const setSuccessMessage = useCallback((msg: string | null) => {
+    setSuccess(msg);
+    setError(null);
+  }, []);
+
+  const setErrorMessage = useCallback((msg: string | null) => {
+    setError(msg);
+    setSuccess(null);
+  }, []);
+
+  const clearMessages = useCallback(() => {
+    setSuccess(null);
+    setError(null);
+  }, []);
 
   const value = useMemo(
-    () => ({
-      ...statusMessage,
-      setSuccessMessage: (msg: string | null) => dispatch({ type: "setSuccess", message: msg }),
-      setErrorMessage: (msg: string | null) => dispatch({ type: "setError", message: msg }),
-      clearMessages: () => dispatch({ type: "clear" }),
-    }),
-    [statusMessage]
+    () => ({ successMessage, errorMessage, setSuccessMessage, setErrorMessage, clearMessages }),
+    [successMessage, errorMessage, setSuccessMessage, setErrorMessage, clearMessages]
   );
 
   return <StatusMessageContext.Provider value={value}>{children}</StatusMessageContext.Provider>;
-}
-
-function statusMessageReducer(_: StatusMessage, action: StatusMessageAction): StatusMessage {
-  switch (action.type) {
-    case "setSuccess": {
-      return { successMessage: action.message, errorMessage: null };
-    }
-    case "setError": {
-      return { successMessage: null, errorMessage: action.message };
-    }
-    case "clear": {
-      return { successMessage: null, errorMessage: null };
-    }
-    default: {
-      throw Error("Unknown action");
-    }
-  }
 }
