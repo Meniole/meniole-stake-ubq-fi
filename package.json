@@ -6,6 +6,7 @@
     "@reown/appkit": "1.8.10",
     "@reown/appkit-adapter-wagmi": "1.8.10",
     "@tanstack/react-query": "^5.85.9",
+    "prettier": "^3.6.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "viem": "2.x",
@@ -15,7 +16,9 @@
     "local": "bunx --bun vite --mode local-node",
     "dev": "bunx --bun vite --mode dev",
     "build": "vite build --mode prod",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
@@ -23,6 +26,7 @@
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.2",
     "eslint": "^9.35.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
