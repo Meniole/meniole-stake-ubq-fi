@@ -5,10 +5,6 @@ import { isLocalNode, RPC_URL } from "../constants/config";
 import { http, createConfig, type Transport } from "wagmi";
 import { injected } from "wagmi/connectors";
 
-// ============================================================================
-// Chain Configuration
-// ============================================================================
-
 const anvilChain = {
   id: 31337,
   name: "Anvil",
@@ -27,10 +23,6 @@ const anvilChain = {
 
 export const supportedChains: readonly [Chain, ...Chain[]] = isLocalNode ? [mainnet, anvilChain] : [mainnet];
 
-// ============================================================================
-// Transport Configuration
-// ============================================================================
-
 type ChainId = (typeof supportedChains)[number]["id"];
 type TransportsMap = Record<ChainId, Transport>;
 
@@ -39,14 +31,9 @@ const transports = supportedChains.reduce<TransportsMap>((acc, chain) => {
 
   acc[chain.id as ChainId] = http(rpcUrl, {
     batch: true,
-    timeout: 30_000,
   });
   return acc;
 }, {} as TransportsMap);
-
-// ============================================================================
-// WalletConnect Configuration
-// ============================================================================
 
 const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID?.trim() || "";
 
@@ -58,10 +45,6 @@ if (!isWalletConnectConfigured && import.meta.env.DEV) {
   );
 }
 
-// ============================================================================
-// Metadata
-// ============================================================================
-
 const metadata = {
   name: "Ubiquity Staking",
   description: "Staking frontend for the Ubiquity protocol",
@@ -70,10 +53,6 @@ const metadata = {
     typeof window !== "undefined" ? `${window.location.origin}/src/assets/ubiquity-dao-logo.svg` : "https://stake.ubq.fi/src/assets/ubiquity-dao-logo.svg",
   ],
 } as const;
-
-// ============================================================================
-// Wagmi Configuration
-// ============================================================================
 
 export const wagmiAdapter = new WagmiAdapter({
   networks: supportedChains,
@@ -87,10 +66,6 @@ export const wagmiConfig = createConfig({
   transports,
   ssr: false,
 });
-
-// ============================================================================
-// AppKit Configuration (Modal)
-// ============================================================================
 
 createAppKit({
   adapters: [wagmiAdapter],

@@ -26,7 +26,6 @@ export const useStakingActions = ({ poolId, lpTokenAddress, lpTokenDecimals, onT
     try {
       const receipt = await waitForTransactionReceipt(publicClient, {
         hash,
-        timeout: 15_000,
       });
 
       if (receipt.status === "success") {
