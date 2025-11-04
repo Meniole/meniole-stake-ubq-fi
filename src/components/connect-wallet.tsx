@@ -1,33 +1,33 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useCallback } from "react";
 import { useAppKit, useAppKitAccount, useAppKitNetwork } from "@reown/appkit/react";
 import { supportedChains } from "../wallet/config";
 import { ICONS } from "./iconography";
 import { formatWalletAddress, getChainName } from "../utils";
 import { useStatusMessage } from "../context/status-message";
 
-const useWalletStateCleanup = (clearMessages: () => void) => {
+const useWalletStateCleanup = () => {
   const { isConnected } = useAppKitAccount();
   const { chainId } = useAppKitNetwork();
-  const prevStateRef = useRef({ isConnected, chainId });
+  const { clearMessages } = useStatusMessage();
 
   useEffect(() => {
-    if (prevStateRef.current.isConnected !== isConnected || prevStateRef.current.chainId !== chainId) {
-      clearMessages();
-      prevStateRef.current = { isConnected, chainId };
-    }
-  }, [isConnected, chainId, clearMessages]);
+    clearMessages();    
+  }, [isConnected, chainId]);
 };
 
 export function ConnectWalletButton() {
   const { open } = useAppKit();
   const { address, isConnected, status } = useAppKitAccount();
   const { chainId } = useAppKitNetwork();
-  const { clearMessages } = useStatusMessage();
 
-  useWalletStateCleanup(clearMessages);
+  useWalletStateCleanup()
+  
+  const handleOpenWallet = useCallback(() => {
+    open();
+  }, [open]);
 
   const buttonProps = {
-    onClick: () => open(),
+    onClick: handleOpenWallet,
     className: `wallet-button ${isConnected ? "wallet-button--connected" : ""}`,
   };
 
@@ -45,8 +45,13 @@ export function ConnectWalletButton() {
   }
 
   const isConnecting = status === "connecting";
+
   return (
-    <button {...buttonProps} disabled={isConnecting} title={isConnecting ? "Connecting to wallet..." : "Connect your wallet"}>
+    <button
+      {...buttonProps}
+      disabled={isConnecting}
+      title={isConnecting ? "Connecting to wallet..." : "Connect your wallet"}
+    >
       {ICONS.CONNECT}
       <span>{isConnecting ? "Connecting..." : "Connect Wallet"}</span>
     </button>

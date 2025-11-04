@@ -5,8 +5,35 @@ import { useErc20Token } from "../hooks/erc20Token";
 import { useState } from "react";
 import { Button } from "./button";
 import { useStaking } from "../hooks/useStaking";
-import { safeFormatUnits, safeParseUnits, calculatePoolRewardPerDay, calculateUserPoolShare, calculateUserRewardPerDay } from "../utils";
+import { safeFormatUnits, safeParseUnits, calculatePoolRewardPerDay, calculateUserPoolShare, calculateUserRewardPerDay } from "../utils/pool";
 import type { Address } from "viem";
+import { z } from "zod";
+
+const TokenInfoSchema = z.object({
+  name: z.string(),
+  symbol: z.string(),
+  decimals: z.number(),
+});
+
+const PoolInfoSchema = z.object({
+  lpToken: z.custom<Address>(),
+  amount: z.bigint(),
+  allocationPoints: z.bigint(),
+});
+
+const StakingSettingsSchema = z.tuple([
+  z.custom<Address>(),
+  z.any(),
+  z.any(),
+  z.bigint(),
+  z.any(),
+  z.any(),
+  z.bigint(),
+]);
+
+const UserInfoSchema = z.object({
+  amount: z.bigint(),
+});
 
 interface PoolDisplayProps {
   poolId?: bigint;
@@ -49,11 +76,16 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
     );
   }
 
+  const validatedStakingSettings = StakingSettingsSchema.safeParse(stakingSettings.data);
+  const validatedLpTokenInfo = TokenInfoSchema.safeParse(lpTokenInfo.data);
+  const validatedRewardTokenInfo = TokenInfoSchema.safeParse(rewardTokenInfo.data);
+  const validatedPoolInfo = PoolInfoSchema.safeParse(poolInfo.data);
+
   const isLoading =
-    !stakingSettings.data ||
-    !lpTokenInfo.data ||
-    !rewardTokenInfo.data ||
-    !poolInfo.data ||
+    !validatedStakingSettings.success ||
+    !validatedLpTokenInfo.success ||
+    !validatedRewardTokenInfo.success ||
+    !validatedPoolInfo.success ||
     (isConnected && Object.values(staking.data).some((d) => d.data === undefined));
 
   if (isLoading) {
@@ -67,21 +99,21 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
     );
   }
 
-  const parsedStakeAmount = safeParseUnits(stakeAmount, lpTokenInfo.data.decimals);
-  const parsedUnstakeAmount = safeParseUnits(unstakeAmount, lpTokenInfo.data.decimals);
+  const lpToken = validatedLpTokenInfo.data;
+  const rewardToken = validatedRewardTokenInfo.data;
+  const pool = validatedPoolInfo.data;
+  const settings = validatedStakingSettings.data;
+
+  const parsedStakeAmount = safeParseUnits(stakeAmount, lpToken.decimals);
+  const parsedUnstakeAmount = safeParseUnits(unstakeAmount, lpToken.decimals);
   const isAllowanceSufficient = staking.data.allowance.data !== undefined && parsedStakeAmount ? staking.data.allowance.data >= parsedStakeAmount : false;
 
-  const poolRewardPerDay = calculatePoolRewardPerDay(
-    stakingSettings.data[3],
-    poolInfo.data.allocationPoints,
-    stakingSettings.data[6],
-    rewardTokenInfo.data.decimals
-  );
+  const poolRewardPerDay = calculatePoolRewardPerDay(settings[3], pool.allocationPoints, settings[6], rewardToken.decimals);
+
+  const validatedUserInfo = staking.data.userInfo.data ? UserInfoSchema.safeParse(staking.data.userInfo.data) : null;
 
   const userPoolShare =
-    staking.data.userInfo.data && poolInfo.data.amount > 0n
-      ? calculateUserPoolShare(staking.data.userInfo.data.amount, poolInfo.data.amount, lpTokenInfo.data.decimals)
-      : null;
+    validatedUserInfo?.success && pool.amount > 0n ? calculateUserPoolShare(validatedUserInfo.data.amount, pool.amount, lpToken.decimals) : null;
 
   const userRewardPerDay = calculateUserRewardPerDay(userPoolShare, poolRewardPerDay);
   const isWritingContract = Object.values(isWriting).some(Boolean);
@@ -90,12 +122,12 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
 
   return (
     <div className="pool-container">
-      <div className="pool-title">{lpTokenInfo.data.name} Pool</div>
+      <div className="pool-title">{lpToken.name} Pool</div>
       <div>
-        Total Staked: {safeFormatUnits(poolInfo.data.amount, lpTokenInfo.data.decimals)} {lpTokenInfo.data.symbol}
+        Total Staked: {safeFormatUnits(pool.amount, lpToken.decimals)} {lpToken.symbol}
       </div>
       <div>
-        Your Stake: {staking.data.userInfo.data ? safeFormatUnits(staking.data.userInfo.data.amount, lpTokenInfo.data.decimals) : "-"} {lpTokenInfo.data.symbol}{" "}
+        Your Stake: {validatedUserInfo?.success ? safeFormatUnits(validatedUserInfo.data.amount, lpToken.decimals) : "-"} {lpToken.symbol}{" "}
         {userPoolShare && userPoolShare > 0.0001 ? `(${(userPoolShare * 100).toFixed(2)}% of pool)` : ""}
       </div>
 
@@ -103,8 +135,8 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
         <div className="column-container">
           <div className="max-amount">
             Max:{" "}
-            <span onClick={() => setStakeAmount(safeFormatUnits(staking.data.balance.data, lpTokenInfo.data.decimals))}>
-              {safeFormatUnits(staking.data.balance.data, lpTokenInfo.data.decimals)} {lpTokenInfo.data.symbol}
+            <span onClick={() => setStakeAmount(safeFormatUnits(staking.data.balance.data, lpToken.decimals))}>
+              {safeFormatUnits(staking.data.balance.data, lpToken.decimals)} {lpToken.symbol}
             </span>
           </div>
           <input type="text" pattern="\d*\.?\d*" placeholder="Amount" value={stakeAmount} onChange={(e) => setStakeAmount(e.target.value)} />
@@ -146,8 +178,8 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
         <div className="column-container">
           <div className="max-amount">
             Max:{" "}
-            <span onClick={() => setUnstakeAmount(safeFormatUnits(staking.data.userInfo.data?.amount, lpTokenInfo.data.decimals))}>
-              {staking.data.userInfo.data ? safeFormatUnits(staking.data.userInfo.data.amount, lpTokenInfo.data.decimals) : "-"} {lpTokenInfo.data.symbol}
+            <span onClick={() => setUnstakeAmount(safeFormatUnits(validatedUserInfo?.data?.amount, lpToken.decimals))}>
+              {validatedUserInfo?.success ? safeFormatUnits(validatedUserInfo.data.amount, lpToken.decimals) : "-"} {lpToken.symbol}
             </span>
           </div>
           <input type="text" pattern="\d*\.?\d*" placeholder="Amount" value={unstakeAmount} onChange={(e) => setUnstakeAmount(e.target.value)} />
@@ -156,11 +188,11 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
             disabled={
               isWritingContract ||
               !isConnected ||
-              !staking.data.userInfo.data ||
+              !validatedUserInfo?.success ||
               !staking.data.balance.data ||
               !parsedUnstakeAmount ||
               parsedUnstakeAmount <= 0 ||
-              parsedUnstakeAmount > staking.data.userInfo.data.amount
+              parsedUnstakeAmount > validatedUserInfo.data.amount
             }
             onClick={() => staking.actions.executeUnstake(unstakeAmount, () => setWriting("unstake", false))}
             isLoading={isWriting.unstake}
@@ -174,13 +206,11 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
       <div>
         <div>
           Pending Rewards:{" "}
-          {staking.data.pendingRewards.data !== undefined
-            ? Number(safeFormatUnits(staking.data.pendingRewards.data, rewardTokenInfo.data.decimals)).toFixed(2)
-            : "-"}{" "}
-          {rewardTokenInfo.data.symbol}
+          {staking.data.pendingRewards.data !== undefined ? Number(safeFormatUnits(staking.data.pendingRewards.data, rewardToken.decimals)).toFixed(2) : "-"}{" "}
+          {rewardToken.symbol}
         </div>
         <div>
-          Reward Per Day: {userRewardPerDay !== null ? userRewardPerDay.toFixed(2) : "-"} {rewardTokenInfo.data?.symbol}
+          Reward Per Day: {userRewardPerDay !== null ? userRewardPerDay.toFixed(2) : "-"} {rewardToken.symbol}
         </div>
         <Button
           className="action-button"
