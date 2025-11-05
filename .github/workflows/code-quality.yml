@@ -1,0 +1,129 @@
+name: Lint and Format Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - '**.ts'
+      - '**.tsx'
+      - '**.js'
+      - '**.jsx'
+      - '**.json'
+      - '**.css'
+      - '**.md'
+      - 'package.json'
+      - 'bun.lockb'
+      - '.eslintrc.*'
+      - '.prettierrc.*'
+
+jobs:
+  code-quality:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run Prettier check
+        run: bun run format:check
+        continue-on-error: true
+        id: prettier
+
+      - name: Run ESLint
+        run: bun run lint
+        continue-on-error: true
+        id: eslint
+
+      - name: Run TypeScript check
+        run: bunx tsc --noEmit
+        continue-on-error: true
+        id: typescript
+
+      - name: Comment PR with results
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prettierStatus = '${{ steps.prettier.outcome }}';
+            const eslintStatus = '${{ steps.eslint.outcome }}';
+            const typescriptStatus = '${{ steps.typescript.outcome }}';
+            
+            const statusIcon = (status) => status === 'success' ? 'PASSED' : 'FAILED';
+            
+            let message = '## Code Quality Check Results\n\n';
+            message += '| Check | Status |\n';
+            message += '|-------|--------|\n';
+            message += `| Prettier | ${statusIcon(prettierStatus)} |\n`;
+            message += `| ESLint | ${statusIcon(eslintStatus)} |\n`;
+            message += `| TypeScript | ${statusIcon(typescriptStatus)} |\n\n`;
+            
+            if (prettierStatus !== 'success') {
+              message += '### Prettier Format Check\n';
+              message += 'Code formatting issues detected. Run the following command to fix:\n';
+              message += '```bash\nbun run format\n```\n\n';
+            }
+            
+            if (eslintStatus !== 'success') {
+              message += '### ESLint\n';
+              message += 'Linting errors detected. Please fix before merging.\n';
+              message += '```bash\nbun run lint\n```\n\n';
+            }
+            
+            if (typescriptStatus !== 'success') {
+              message += '### TypeScript\n';
+              message += 'Type errors detected. Please fix before merging.\n';
+              message += '```bash\nbunx tsc --noEmit\n```\n\n';
+            }
+            
+            const allPassed = prettierStatus === 'success' && eslintStatus === 'success' && typescriptStatus === 'success';
+            message += allPassed ? '\nAll checks passed successfully.' : '\nPlease address the issues above before merging.';
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Code Quality Check Results')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: message
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: message
+              });
+            }
+
+      - name: Fail workflow if checks failed
+        if: steps.prettier.outcome != 'success' || steps.eslint.outcome != 'success' || steps.typescript.outcome != 'success'
+        run: exit 1

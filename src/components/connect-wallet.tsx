@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect} from "react";
 import { useAppKit, useAppKitAccount, useAppKitNetwork } from "@reown/appkit/react";
 import { supportedChains } from "../wallet/config";
 import { ICONS } from "./iconography";
@@ -13,7 +13,7 @@ const useWalletStateCleanup = () => {
 
   useEffect(() => {
     clearMessages();
-  }, [isConnected, chainId]);
+  }, [isConnected, chainId, clearMessages]);
 };
 
 export function ConnectWalletButton() {
