@@ -12,4 +12,3 @@ export const getChainName = (chainId: number | undefined, chains: Array<{ id: nu
 export const toValidAddress = (address: string | Address | undefined): Address => {
   return address && isAddress(address) ? (address as Address) : zeroAddress;
 };
-

@@ -21,15 +21,7 @@ const PoolInfoSchema = z.object({
   allocationPoints: z.bigint(),
 });
 
-const StakingSettingsSchema = z.tuple([
-  z.custom<Address>(),
-  z.any(),
-  z.any(),
-  z.bigint(),
-  z.any(),
-  z.any(),
-  z.bigint(),
-]);
+const StakingSettingsSchema = z.tuple([z.custom<Address>(), z.any(), z.any(), z.bigint(), z.any(), z.any(), z.bigint()]);
 
 const UserInfoSchema = z.object({
   amount: z.bigint(),
@@ -80,13 +72,14 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   const validatedLpTokenInfo = TokenInfoSchema.safeParse(lpTokenInfo.data);
   const validatedRewardTokenInfo = TokenInfoSchema.safeParse(rewardTokenInfo.data);
   const validatedPoolInfo = PoolInfoSchema.safeParse(poolInfo.data);
+  const validatedUserInfo = UserInfoSchema.safeParse(staking.data.userInfo.data);
 
   const isLoading =
     !validatedStakingSettings.success ||
     !validatedLpTokenInfo.success ||
     !validatedRewardTokenInfo.success ||
     !validatedPoolInfo.success ||
-    (isConnected && Object.values(staking.data).some((d) => d.data === undefined));
+    (isConnected && !validatedUserInfo.success);
 
   if (isLoading) {
     return (
@@ -103,6 +96,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   const rewardToken = validatedRewardTokenInfo.data;
   const pool = validatedPoolInfo.data;
   const settings = validatedStakingSettings.data;
+  const userInfo = validatedUserInfo.success ? validatedUserInfo.data : { amount: 0n };
 
   const parsedStakeAmount = safeParseUnits(stakeAmount, lpToken.decimals);
   const parsedUnstakeAmount = safeParseUnits(unstakeAmount, lpToken.decimals);
@@ -110,10 +104,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
 
   const poolRewardPerDay = calculatePoolRewardPerDay(settings[3], pool.allocationPoints, settings[6], rewardToken.decimals);
 
-  const validatedUserInfo = staking.data.userInfo.data ? UserInfoSchema.safeParse(staking.data.userInfo.data) : null;
-
-  const userPoolShare =
-    validatedUserInfo?.success && pool.amount > 0n ? calculateUserPoolShare(validatedUserInfo.data.amount, pool.amount, lpToken.decimals) : null;
+  const userPoolShare = pool.amount > 0n ? calculateUserPoolShare(userInfo.amount, pool.amount, lpToken.decimals) : null;
 
   const userRewardPerDay = calculateUserRewardPerDay(userPoolShare, poolRewardPerDay);
   const isWritingContract = Object.values(isWriting).some(Boolean);
@@ -127,7 +118,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
         Total Staked: {safeFormatUnits(pool.amount, lpToken.decimals)} {lpToken.symbol}
       </div>
       <div>
-        Your Stake: {validatedUserInfo?.success ? safeFormatUnits(validatedUserInfo.data.amount, lpToken.decimals) : "-"} {lpToken.symbol}{" "}
+        Your Stake: {safeFormatUnits(userInfo.amount, lpToken.decimals)} {lpToken.symbol}{" "}
         {userPoolShare && userPoolShare > 0.0001 ? `(${(userPoolShare * 100).toFixed(2)}% of pool)` : ""}
       </div>
 
@@ -135,8 +126,8 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
         <div className="column-container">
           <div className="max-amount">
             Max:{" "}
-            <span onClick={() => setStakeAmount(safeFormatUnits(staking.data.balance.data, lpToken.decimals))}>
-              {safeFormatUnits(staking.data.balance.data, lpToken.decimals)} {lpToken.symbol}
+            <span onClick={() => setStakeAmount(safeFormatUnits(userInfo.amount, lpToken.decimals))}>
+              {safeFormatUnits(userInfo.amount, lpToken.decimals)} {lpToken.symbol}
             </span>
           </div>
           <input type="text" pattern="\d*\.?\d*" placeholder="Amount" value={stakeAmount} onChange={(e) => setStakeAmount(e.target.value)} />
@@ -178,8 +169,8 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
         <div className="column-container">
           <div className="max-amount">
             Max:{" "}
-            <span onClick={() => setUnstakeAmount(safeFormatUnits(validatedUserInfo?.data?.amount, lpToken.decimals))}>
-              {validatedUserInfo?.success ? safeFormatUnits(validatedUserInfo.data.amount, lpToken.decimals) : "-"} {lpToken.symbol}
+            <span onClick={() => setUnstakeAmount(safeFormatUnits(userInfo.amount, lpToken.decimals))}>
+              {safeFormatUnits(userInfo.amount, lpToken.decimals)} {lpToken.symbol}
             </span>
           </div>
           <input type="text" pattern="\d*\.?\d*" placeholder="Amount" value={unstakeAmount} onChange={(e) => setUnstakeAmount(e.target.value)} />
@@ -188,11 +179,10 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
             disabled={
               isWritingContract ||
               !isConnected ||
-              !validatedUserInfo?.success ||
               !staking.data.balance.data ||
               !parsedUnstakeAmount ||
               parsedUnstakeAmount <= 0 ||
-              parsedUnstakeAmount > validatedUserInfo.data.amount
+              parsedUnstakeAmount > userInfo.amount
             }
             onClick={() => staking.actions.executeUnstake(unstakeAmount, () => setWriting("unstake", false))}
             isLoading={isWriting.unstake}

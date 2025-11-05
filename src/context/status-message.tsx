@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useMemo } from "react";
+import { createContext, useContext, useReducer } from "react";
 
 type StatusMessage = {
   successMessage: string | null;
@@ -13,17 +13,14 @@ type StatusMessageContext = {
   clearMessages: () => void;
 };
 
-type StatusMessageAction =
-  | { type: "setSuccess"; message: string | null }
-  | { type: "setError"; message: string | null }
-  | { type: "clear" };
+type StatusMessageAction = { type: "setSuccess"; message: string | null } | { type: "setError"; message: string | null } | { type: "clear" };
 
 const StatusMessageContext = createContext<StatusMessageContext>({
   successMessage: null,
   errorMessage: null,
-  setSuccessMessage: () => { },
-  setErrorMessage: () => { },
-  clearMessages: () => { },
+  setSuccessMessage: () => {},
+  setErrorMessage: () => {},
+  clearMessages: () => {},
 });
 
 export const useStatusMessage = () => {
@@ -36,7 +33,7 @@ export function StatusMessageProvider({ children }: { children: React.ReactNode 
     errorMessage: null,
   });
 
-  const contextValue = useMemo(() => ({
+  const contextValue = {
     ...statusMessage,
     setSuccessMessage: (msg: string | null) => {
       dispatch({ type: "setSuccess", message: msg });
@@ -47,13 +44,9 @@ export function StatusMessageProvider({ children }: { children: React.ReactNode 
     clearMessages: () => {
       dispatch({ type: "clear" });
     },
-  }), [statusMessage]);
+  };
 
-  return (
-    <StatusMessageContext.Provider value={contextValue}>
-      {children}
-    </StatusMessageContext.Provider>
-  );
+  return <StatusMessageContext.Provider value={contextValue}>{children}</StatusMessageContext.Provider>;
 }
 
 function statusMessageReducer(_: StatusMessage, action: StatusMessageAction): StatusMessage {
