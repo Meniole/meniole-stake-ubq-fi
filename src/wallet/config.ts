@@ -4,6 +4,7 @@ import { mainnet, type Chain } from "viem/chains";
 import { isLocalNode, RPC_URL } from "../constants/config";
 import { http, createConfig, type Transport } from "wagmi";
 import { injected } from "wagmi/connectors";
+import type { AppKitNetwork } from "@reown/appkit/networks";
 
 const anvilChain = {
   id: 31337,
@@ -50,12 +51,14 @@ const metadata = {
   description: "Staking frontend for the Ubiquity protocol",
   url: typeof window !== "undefined" ? window.location.origin : "https://stake.ubq.fi",
   icons: [
-    typeof window !== "undefined" ? `${window.location.origin}/src/assets/ubiquity-dao-logo.svg` : "https://stake.ubq.fi/src/assets/ubiquity-dao-logo.svg",
+    typeof window !== "undefined"
+      ? `${window.location.origin}/src/assets/ubiquity-dao-logo.svg`
+      : "https://stake.ubq.fi/src/assets/ubiquity-dao-logo.svg",
   ],
-} as const;
+};
 
 export const wagmiAdapter = new WagmiAdapter({
-  networks: supportedChains,
+  networks: [...supportedChains] as [AppKitNetwork, ...AppKitNetwork[]],
   projectId,
   ssr: false,
 });
@@ -69,7 +72,7 @@ export const wagmiConfig = createConfig({
 
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: supportedChains,
+  networks: supportedChains as [AppKitNetwork, ...AppKitNetwork[]],
   projectId,
   metadata,
   features: {
@@ -79,7 +82,5 @@ createAppKit({
     "--w3m-accent": "#00BFFF",
     "--w3m-border-radius-master": "4px",
     "--w3m-font-family": "Ubiquity Nova, sans-serif",
-  },
-  enableNetworkView: true,
-  enableAccountView: true,
+  }  
 });
