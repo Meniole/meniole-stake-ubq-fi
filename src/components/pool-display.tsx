@@ -32,14 +32,14 @@ interface PoolDisplayProps {
 }
 
 const WRITE_ACTION = {
-  APPROVE: 'approve',
-  STAKE: 'stake',
-  UNSTAKE: 'unstake',
-  CLAIM: 'claim',
-  NONE: 'none',
+  APPROVE: "approve",
+  STAKE: "stake",
+  UNSTAKE: "unstake",
+  CLAIM: "claim",
+  NONE: "none",
 } as const;
 
-type WriteAction = typeof WRITE_ACTION[keyof typeof WRITE_ACTION];
+type WriteAction = (typeof WRITE_ACTION)[keyof typeof WRITE_ACTION];
 
 export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   const { address, isConnected } = useAppKitAccount();
@@ -151,7 +151,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
             onClick={async () => {
               setCurrentWriteAction(WRITE_ACTION.APPROVE);
               try {
-                await staking.actions.executeApprove(stakeAmount, () => { });
+                await staking.actions.executeApprove(stakeAmount, () => {});
               } finally {
                 setCurrentWriteAction(WRITE_ACTION.NONE);
               }
@@ -175,7 +175,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
             onClick={async () => {
               setCurrentWriteAction(WRITE_ACTION.STAKE);
               try {
-                await staking.actions.executeStake(stakeAmount, () => { });
+                await staking.actions.executeStake(stakeAmount, () => {});
               } finally {
                 setCurrentWriteAction(WRITE_ACTION.NONE);
               }
@@ -207,7 +207,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
             onClick={async () => {
               setCurrentWriteAction(WRITE_ACTION.UNSTAKE);
               try {
-                await staking.actions.executeUnstake(unstakeAmount, () => { });
+                await staking.actions.executeUnstake(unstakeAmount, () => {});
               } finally {
                 setCurrentWriteAction(WRITE_ACTION.NONE);
               }
@@ -234,7 +234,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
           onClick={async () => {
             setCurrentWriteAction(WRITE_ACTION.CLAIM);
             try {
-              await staking.actions.executeClaim(() => { });
+              await staking.actions.executeClaim(() => {});
             } finally {
               setCurrentWriteAction(WRITE_ACTION.NONE);
             }
