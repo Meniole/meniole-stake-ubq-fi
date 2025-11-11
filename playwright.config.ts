@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const port = 4173;
+const port = Number(process.env.PLAYWRIGHT_PORT ?? 5173);
 const baseHost = "127.0.0.1";
 const isCI = !!process.env.CI;
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://${baseHost}:${port}`;
@@ -22,9 +22,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `bun x --bun vite preview --host 0.0.0.0 --port ${port} --strictPort`,
+    command: `bun x --bun vite preview --host ${baseHost} --port ${port} --strictPort`,
     url: baseURL,
     reuseExistingServer: !isCI,
-    timeout: 60000,
+    timeout: 120000,
+    env: {
+      NODE_ENV: "production",
+    },
   },
 });
