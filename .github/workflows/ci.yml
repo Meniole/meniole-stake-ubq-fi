@@ -67,6 +67,11 @@ jobs:
         with:
           name: dist
           path: .
+      - name: Ensure build output
+        run: |
+          if [ ! -d dist ] || [ -z "$(ls -A dist 2>/dev/null)" ]; then
+            bun run build
+          fi
       - run: bun x playwright install --with-deps chromium
       - run: bun x playwright test --project chromium
 
