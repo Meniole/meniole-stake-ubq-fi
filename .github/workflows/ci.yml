@@ -68,9 +68,6 @@ jobs:
         with:
           name: dist
           path: dist
-      - name: Ensure build output
-        if: ${{ hashFiles('dist/**/*') == '' }}
-        run: bun run build
       - run: bun x playwright install --with-deps chromium
       - run: bun x playwright test --project chromium
 
