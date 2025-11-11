@@ -64,14 +64,13 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - uses: actions/download-artifact@v6
+        id: download-dist
         with:
           name: dist
-          path: .
+          path: dist
       - name: Ensure build output
-        run: |
-          if [ ! -d dist ] || [ -z "$(ls -A dist 2>/dev/null)" ]; then
-            bun run build
-          fi
+        if: ${{ hashFiles('dist/**/*') == '' }}
+        run: bun run build
       - run: bun x playwright install --with-deps chromium
       - run: bun x playwright test --project chromium
 
