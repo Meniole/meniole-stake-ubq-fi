@@ -1,9 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const port = Number(process.env.PLAYWRIGHT_PORT ?? 5173);
-const baseHost = "127.0.0.1";
 const isCI = !!process.env.CI;
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://${baseHost}:${port}`;
+const defaultHost = process.env.PLAYWRIGHT_BASE_HOST ?? "127.0.0.1";
+const serverHost =
+  process.env.PLAYWRIGHT_HOST ?? (isCI ? "0.0.0.0" : defaultHost);
+const port = Number(process.env.PLAYWRIGHT_PORT ?? 4173);
+const baseURL =
+  process.env.PLAYWRIGHT_BASE_URL ?? `http://${defaultHost}:${port}`;
 
 export default defineConfig({
   testDir: "e2e",
@@ -22,7 +25,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `bun x --bun vite preview --host ${baseHost} --port ${port} --strictPort`,
+    command: `bun x --bun vite preview --host ${serverHost} --port ${port} --strictPort`,
     url: baseURL,
     reuseExistingServer: !isCI,
     timeout: 120000,
