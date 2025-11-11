@@ -13,9 +13,7 @@
     "local": "bun x --bun vite --mode local-node",
     "dev": "bun x --bun vite --mode dev",
     "build": "vite build --mode prod",
-    "lint": "eslint .",
-    "test": "bun test",
-    "test:e2e": "bun run build && bun x playwright test"
+    "lint": "eslint ."
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
