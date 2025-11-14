@@ -51,9 +51,7 @@ const metadata = {
   description: "Staking frontend for the Ubiquity protocol",
   url: typeof window !== "undefined" ? window.location.origin : "https://stake.ubq.fi",
   icons: [
-    typeof window !== "undefined"
-      ? `${window.location.origin}/src/assets/ubiquity-dao-logo.svg`
-      : "https://stake.ubq.fi/src/assets/ubiquity-dao-logo.svg",
+    typeof window !== "undefined" ? `${window.location.origin}/src/assets/ubiquity-dao-logo.svg` : "https://stake.ubq.fi/src/assets/ubiquity-dao-logo.svg",
   ],
 };
 
@@ -81,6 +79,5 @@ createAppKit({
   themeVariables: {
     "--w3m-accent": "#00BFFF",
     "--w3m-border-radius-master": "4px",
-    "--w3m-font-family": "Ubiquity Nova",
-  }  
+  },
 });
