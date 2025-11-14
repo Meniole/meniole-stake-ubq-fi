@@ -17,7 +17,7 @@ interface UseStakingParams {
 
 export const useStaking = ({ poolId, address, lpTokenAddress, lpTokenDecimals, isConnected, onTransactionComplete }: UseStakingParams) => {
   const validAddress = toValidAddress(address);
-  const { writeContract } = useWriteContract();
+  const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
   const { setErrorMessage, setSuccessMessage, clearMessages } = useStatusMessage();
 
@@ -71,34 +71,60 @@ export const useStaking = ({ poolId, address, lpTokenAddress, lpTokenDecimals, i
     setErrorMessage(message);
   };
 
-  const executeWrite = (config: Parameters<typeof writeContract>[0], onSettled: () => void) => {
+  const executeWrite = async (
+    config: Parameters<typeof writeContractAsync>[0]
+  ): Promise<void> => {
     clearMessages();
-    writeContract(config, { onSuccess: handleSuccess, onError: handleError, onSettled });
+
+    try {
+      const hash = await writeContractAsync(config);
+
+      if (!hash) {
+        throw new Error("Transaction hash not received");
+      }
+
+      await handleSuccess(hash);
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
   };
 
-  const executeStake = (amount: string, onSettled: () => void) => {
-    executeWrite({ ...stakingContract, functionName: "stake", args: [poolId, parseUnits(amount, lpTokenDecimals)] }, onSettled);
+  const executeStake = async (amount: string): Promise<void> => {
+    await executeWrite({
+      ...stakingContract,
+      functionName: "stake",
+      args: [poolId, parseUnits(amount, lpTokenDecimals)],
+    });
   };
 
-  const executeUnstake = (amount: string, onSettled: () => void) => {
-    executeWrite({ ...stakingContract, functionName: "unstake", args: [poolId, parseUnits(amount, lpTokenDecimals)] }, onSettled);
+  const executeUnstake = async (amount: string): Promise<void> => {
+    await executeWrite({
+      ...stakingContract,
+      functionName: "unstake",
+      args: [poolId, parseUnits(amount, lpTokenDecimals)],
+    });
   };
 
-  const executeClaim = (onSettled: () => void) => {
-    executeWrite({ ...stakingContract, functionName: "unstake", args: [poolId, 0n] }, onSettled);
+  const executeClaim = async (): Promise<void> => {
+    await executeWrite({
+      ...stakingContract,
+      functionName: "unstake",
+      args: [poolId, 0n],
+    });
   };
 
-  const executeApprove = (amount: string, onSettled: () => void) => {
-    if (!lpTokenAddress) return;
-    executeWrite(
-      {
-        abi: erc20Abi,
-        address: lpTokenAddress,
-        functionName: "approve",
-        args: [stakingContract.address, parseUnits(amount, lpTokenDecimals)],
-      },
-      onSettled
-    );
+  const executeApprove = async (amount: string): Promise<void> => {
+    if (!lpTokenAddress) {
+      throw new Error("LP token address not available");
+    }
+
+    await executeWrite({
+      abi: erc20Abi,
+      address: lpTokenAddress,
+      functionName: "approve",
+      args: [stakingContract.address, parseUnits(amount, lpTokenDecimals)],
+    });
   };
 
   const refetchAll = () => {

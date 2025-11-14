@@ -10,9 +10,9 @@ import type { Address } from "viem";
 import { z } from "zod";
 
 const TokenInfoSchema = z.object({
-  name: z.string(),
-  symbol: z.string(),
-  decimals: z.number(),
+  name: z.string().min(1),
+  symbol: z.string().min(1),
+  decimals: z.number().int().min(0).max(18),
 });
 
 const PoolInfoSchema = z.object({
@@ -21,7 +21,13 @@ const PoolInfoSchema = z.object({
   allocationPoints: z.bigint(),
 });
 
-const StakingSettingsSchema = z.tuple([z.custom<Address>(), z.any(), z.any(), z.bigint(), z.any(), z.any(), z.bigint()]);
+const StakingSettingsSchema = z.tuple([z.custom<Address>(),
+  z.bigint(),
+  z.bigint(),
+  z.bigint(),
+  z.bigint(),
+  z.bigint(),
+  z.bigint(),]);
 
 const UserInfoSchema = z.object({
   amount: z.bigint(),
@@ -151,7 +157,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
             onClick={async () => {
               setCurrentWriteAction(WRITE_ACTION.APPROVE);
               try {
-                await staking.actions.executeApprove(stakeAmount, () => {});
+                await staking.actions.executeApprove(stakeAmount);
               } finally {
                 setCurrentWriteAction(WRITE_ACTION.NONE);
               }
@@ -175,7 +181,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
             onClick={async () => {
               setCurrentWriteAction(WRITE_ACTION.STAKE);
               try {
-                await staking.actions.executeStake(stakeAmount, () => {});
+                await staking.actions.executeStake(stakeAmount);
               } finally {
                 setCurrentWriteAction(WRITE_ACTION.NONE);
               }
@@ -207,7 +213,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
             onClick={async () => {
               setCurrentWriteAction(WRITE_ACTION.UNSTAKE);
               try {
-                await staking.actions.executeUnstake(unstakeAmount, () => {});
+                await staking.actions.executeUnstake(unstakeAmount);
               } finally {
                 setCurrentWriteAction(WRITE_ACTION.NONE);
               }
@@ -234,7 +240,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
           onClick={async () => {
             setCurrentWriteAction(WRITE_ACTION.CLAIM);
             try {
-              await staking.actions.executeClaim(() => {});
+              await staking.actions.executeClaim();
             } finally {
               setCurrentWriteAction(WRITE_ACTION.NONE);
             }
