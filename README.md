@@ -119,3 +119,12 @@ bun run build
 ```
 
 Outputs to `dist/`. Serve behind a CDN / static host. If you proxy RPC, map `/rpc/*` to your upstream provider for chain ID–scoped calls (`/${chainId}` suffix) except in `local-node` mode.
+
+## Deno Deploy
+
+To run your own instance on Deno Deploy:
+
+1. Sign in to [Deno Deploy](https://dash.deno.com) with a GitHub account that has access to the forked repository (any organization works).
+2. Click **New Project**, choose **Git** integration, and select the `<your_org>/stake.ubq.fi` repository fork.
+3. When prompted for the project name, keep it identical to the repo slug (`stake-ubq-fi`). Deno will normalize the dots automatically.
+4. Confirm the existing CI deploy script configuration and create the project. Deployments will follow whatever branch target you choose.
