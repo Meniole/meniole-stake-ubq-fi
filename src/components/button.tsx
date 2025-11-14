@@ -1,8 +1,6 @@
 import type { MouseEvent } from 'react';
 
-type ButtonClickHandler =
-  | ((...args: any[]) => void | Promise<void | any>)
-  | ((event: MouseEvent<HTMLButtonElement>) => void | Promise<void>);
+type ButtonClickHandler = (event: MouseEvent<HTMLButtonElement>) => void | Promise<void>;
 
 interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> {
   isLoading?: boolean;
@@ -18,22 +16,19 @@ export function Button({
   onClick,
   ...props
 }: ButtonProps) {
-  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-    if (onClick && !disabled && !isLoading) {      
-      try {
-        const result = onClick(event);
-        if (result instanceof Promise) {
-          result.catch(console.error);
-        }
-      } catch {        
-        const result = (onClick as () => any)();
-        if (result instanceof Promise) {
-          result.catch(console.error);
-        }
+  const handleClick = async (event: MouseEvent<HTMLButtonElement>) => {
+    if (!onClick || disabled || isLoading) return;
+
+    try {
+      const result = onClick(event);
+      if (result instanceof Promise) {
+        await result;
       }
+    } catch (error) {
+      console.error('Button click handler error:', error);
     }
   };
-
+ 
   return (
     <button
       {...props}

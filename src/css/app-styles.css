@@ -239,7 +239,7 @@ input:focus-visible {
 }
 
 .wallet-button {
-  font-family: "Ubiquity Nova", sans-serif;
+  font-family: "Ubiquity Nova";
 }
 
 w3m-modal,
@@ -247,7 +247,7 @@ wcm-modal {
   --w3m-accent-color: #0066cc;
   --w3m-background-color: #030b16;
   --w3m-container-border-radius: 4px;
-  --w3m-font-family: "Ubiquity Nova", sans-serif;
+  --w3m-font-family: "Ubiquity Nova";
 }
 
 w3m-modal::part(overlay),

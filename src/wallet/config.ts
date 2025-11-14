@@ -81,6 +81,6 @@ createAppKit({
   themeVariables: {
     "--w3m-accent": "#00BFFF",
     "--w3m-border-radius-master": "4px",
-    "--w3m-font-family": "Ubiquity Nova, sans-serif",
+    "--w3m-font-family": "Ubiquity Nova",
   }  
 });
