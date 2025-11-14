@@ -1,4 +1,4 @@
-import { useEffect} from "react";
+import { useEffect } from "react";
 import { useAppKit, useAppKitAccount, useAppKitNetwork } from "@reown/appkit/react";
 import { supportedChains } from "../wallet/config";
 import { ICONS } from "./iconography";
@@ -6,47 +6,44 @@ import { formatWalletAddress, getChainName } from "../utils";
 import { useStatusMessage } from "../context/status-message";
 import { Button } from "./button";
 
-const useWalletStateCleanup = () => {
-  const { isConnected } = useAppKitAccount();
+export function ConnectWalletButton() {
+  const { open } = useAppKit();
+  const { address, isConnected, status } = useAppKitAccount();
   const { chainId } = useAppKitNetwork();
   const { clearMessages } = useStatusMessage();
 
   useEffect(() => {
     clearMessages();
   }, [isConnected, chainId, clearMessages]);
-};
 
-export function ConnectWalletButton() {
-  const { open } = useAppKit();
-  const { address, isConnected, status } = useAppKitAccount();
-  const { chainId } = useAppKitNetwork();
+  const normalizedChainId = typeof chainId === "string" ? parseInt(chainId, 10) : chainId;
 
-  useWalletStateCleanup();
-
-  const buttonProps = {
-    onClick: open,
-    className: `wallet-button ${isConnected ? "wallet-button--connected" : ""}`,
-  };
+  const isConnecting = status === "connecting";
 
   if (isConnected && address) {
     return (
       <div className="wallet-connect-container">
-        <Button {...buttonProps} id="disconnect" title="Click to manage wallet">
+        <Button onClick={() => open()} className="wallet-button wallet-button--connected" id="disconnect" title="Click to manage wallet">
           {ICONS.DISCONNECT}
           <span>
-            {formatWalletAddress(address)} ({getChainName(chainId, supportedChains)})
+            {formatWalletAddress(address)} ({getChainName(normalizedChainId, supportedChains)})
           </span>
         </Button>
       </div>
     );
   }
 
-  const isConnecting = status === "connecting";
-
   return (
-    <Button {...buttonProps} disabled={isConnecting} title={isConnecting ? "Connecting to wallet..." : "Connect your wallet"}>
+    <Button
+      onClick={() => open()}
+      className="wallet-button"
+      disabled={isConnecting}
+      isLoading={isConnecting}
+      isLoadingText="Connecting..."
+      title={isConnecting ? "Connecting to wallet..." : "Connect your wallet"}
+    >
       {ICONS.CONNECT}
-      <span>{isConnecting ? "Connecting..." : "Connect Wallet"}</span>
+      <span>Connect Wallet</span>
     </Button>
   );
 }
