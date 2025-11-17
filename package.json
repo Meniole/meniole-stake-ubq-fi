@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@reown/appkit": "1.8.10",
-    "@reown/appkit-adapter-wagmi": "1.8.10",
-    "zod": "^4.1.12",
+    "@reown/appkit": "1.8.14",
+    "@reown/appkit-adapter-wagmi": "1.8.14",
     "@tanstack/react-query": "^5.90.7",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "viem": "^2.38.6",
-    "wagmi": "^2.19.3"
+    "wagmi": "^2.19.3",
+    "zod": "^4.1.12"
   },
   "scripts": {
     "local": "bun x --bun vite --mode local-node",
@@ -18,7 +18,7 @@
     "build": "vite build --mode prod",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check",
+    "format:check": "prettier --check .",
     "test": "bun test",
     "test:e2e": "bun x playwright test"
   },
