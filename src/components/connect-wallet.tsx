@@ -3,14 +3,14 @@ import { useAppKit, useAppKitAccount, useAppKitNetwork } from "@reown/appkit/rea
 import { supportedChains } from "../wallet/config";
 import { ICONS } from "./iconography";
 import { formatWalletAddress, getChainName } from "../utils";
-import { useStatusMessage } from "../context/status-message";
+import { useStatusMessageActions } from "../context/status-message";
 import { Button } from "./button";
 
 export function ConnectWalletButton() {
   const { open } = useAppKit();
   const { address, isConnected, status } = useAppKitAccount();
   const { chainId } = useAppKitNetwork();
-  const { clearMessages } = useStatusMessage();
+  const { clearMessages } = useStatusMessageActions();
 
   useEffect(() => {
     clearMessages();
