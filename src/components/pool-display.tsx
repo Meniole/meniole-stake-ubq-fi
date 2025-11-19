@@ -47,8 +47,14 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   const [unstakeAmount, setUnstakeAmount] = useState("");
   const [currentWriteAction, setCurrentWriteAction] = useState<WriteAction>(WRITE_ACTION.NONE);
 
-  const stakingSettings = useReadContract({ ...stakingContract, functionName: "getStakingSettings", args: [] });
-  const poolInfo = useReadContract({ ...stakingContract, functionName: "getStakingPoolInfo", args: [poolId] });
+  const stakingSettings = useReadContract({
+    ...stakingContract, functionName: "getStakingSettings", args: [], query: {
+      retry: 3, 
+      retryDelay: 1000, 
+    } });
+  const poolInfo = useReadContract({
+    ...stakingContract, functionName: "getStakingPoolInfo", args: [poolId], retry: 3,
+    retryDelay: 1000, });
 
   const lpTokenAddress = poolInfo.data?.lpToken as Address | undefined;
   const rewardTokenAddress = stakingSettings.data?.[0] as Address | undefined;
@@ -67,8 +73,12 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
     },
   });
 
-  const hasError =
-    stakingSettings.error || lpTokenInfo.error || rewardTokenInfo.error || poolInfo.error || (isConnected && Object.values(staking.data).some((d) => d.error));
+  const hasRealError =
+    (stakingSettings.error && stakingSettings.fetchStatus === 'idle') ||
+    (lpTokenInfo.error && lpTokenInfo.fetchStatus === 'idle') ||
+    (rewardTokenInfo.error && rewardTokenInfo.fetchStatus === 'idle') ||
+    (poolInfo.error && poolInfo.fetchStatus === 'idle') ||
+    (isConnected && Object.values(staking.data).some((d) => d.error && d.fetchStatus === 'idle'));
 
   const isLoadingInitialData =
     stakingSettings.isLoading ||
@@ -103,11 +113,11 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
     !validatedPoolInfo.success ||
     !validatedUserInfo.success;
 
-  if (hasError || hasValidationError) {
+  if (hasRealError || hasValidationError) {
     return (
       <div className="pool-container">
         <div style={{ padding: "20px", color: "#ff6666" }}>
-          {hasError ? "Failed to load pool data. Please check your connection and try again." : "Invalid pool data. Please try refreshing the page."}
+          {hasRealError ? "Failed to load pool data. Please check your connection and try again." : "Invalid pool data. Please try refreshing the page."}
         </div>
       </div>
     );
