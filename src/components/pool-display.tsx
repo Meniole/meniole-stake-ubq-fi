@@ -48,16 +48,28 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   const [currentWriteAction, setCurrentWriteAction] = useState<WriteAction>(WRITE_ACTION.NONE);
 
   const stakingSettings = useReadContract({
-    ...stakingContract, functionName: "getStakingSettings", args: [], query: {
-      retry: 3, 
-      retryDelay: 1000, 
-    } });
+    ...stakingContract,
+    functionName: "getStakingSettings",
+    args: [],
+    query: {
+      retry: 3,
+      retryDelay: 1000,
+    }
+  });
+
   const poolInfo = useReadContract({
-    ...stakingContract, functionName: "getStakingPoolInfo", args: [poolId], retry: 3,
-    retryDelay: 1000, });
+    ...stakingContract,
+    functionName: "getStakingPoolInfo",
+    args: [poolId],
+    query: {
+      retry: 3,
+      retryDelay: 1000,
+    }
+  });
 
   const lpTokenAddress = poolInfo.data?.lpToken as Address | undefined;
   const rewardTokenAddress = stakingSettings.data?.[0] as Address | undefined;
+
   const lpTokenInfo = useErc20Token(lpTokenAddress);
   const rewardTokenInfo = useErc20Token(rewardTokenAddress);
 
@@ -73,19 +85,25 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
     },
   });
 
-  const hasRealError =
-    (stakingSettings.error && stakingSettings.fetchStatus === 'idle') ||
-    (lpTokenInfo.error && lpTokenInfo.fetchStatus === 'idle') ||
-    (rewardTokenInfo.error && rewardTokenInfo.fetchStatus === 'idle') ||
-    (poolInfo.error && poolInfo.fetchStatus === 'idle') ||
-    (isConnected && Object.values(staking.data).some((d) => d.error && d.fetchStatus === 'idle'));
+  const publicDataErrors = [
+    stakingSettings.error && stakingSettings.fetchStatus === 'idle',
+    lpTokenInfo.error && lpTokenInfo.fetchStatus === 'idle',
+    rewardTokenInfo.error && rewardTokenInfo.fetchStatus === 'idle',
+    poolInfo.error && poolInfo.fetchStatus === 'idle',
+  ];
 
-  const isLoadingInitialData =
+  const hasRealError = publicDataErrors.some(err => err);
+
+  const isLoadingPublicData =
     stakingSettings.isLoading ||
     lpTokenInfo.isLoading ||
     rewardTokenInfo.isLoading ||
-    poolInfo.isLoading ||
-    (isConnected && Object.values(staking.data).some((d) => d.isLoading));
+    poolInfo.isLoading;
+
+  const isLoadingUserData = isConnected &&
+    Object.values(staking.data).some((d) => d.isLoading);
+
+  const isLoadingInitialData = isLoadingPublicData || isLoadingUserData;
 
   if (isLoadingInitialData) {
     return (
@@ -103,21 +121,40 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   const validatedRewardTokenInfo = TokenInfoSchema.safeParse(rewardTokenInfo.data);
   const validatedPoolInfo = PoolInfoSchema.safeParse(poolInfo.data);
 
-  const userInfoForValidation = isConnected ? staking.data.userInfo.data : { amount: 0n };
-  const validatedUserInfo = UserInfoSchema.safeParse(userInfoForValidation);
-
-  const hasValidationError =
+  const publicDataValidationError =
     !validatedStakingSettings.success ||
     !validatedLpTokenInfo.success ||
     !validatedRewardTokenInfo.success ||
-    !validatedPoolInfo.success ||
-    !validatedUserInfo.success;
+    !validatedPoolInfo.success;
 
-  if (hasRealError || hasValidationError) {
+  let validatedUserInfo;
+
+  if (isConnected && staking.data.userInfo.data !== undefined) {
+    validatedUserInfo = UserInfoSchema.safeParse(staking.data.userInfo.data);
+  } else {
+    validatedUserInfo = {
+      success: true,
+      data: { amount: 0n }
+    };
+  }
+
+  if (hasRealError || publicDataValidationError) {
     return (
       <div className="pool-container">
         <div style={{ padding: "20px", color: "#ff6666" }}>
-          {hasRealError ? "Failed to load pool data. Please check your connection and try again." : "Invalid pool data. Please try refreshing the page."}
+          <h3 style={{ marginTop: 0 }}>Error Loading Pool Data</h3>
+          {hasRealError && <p>Failed to load pool information. Please try again later.</p>}
+          {publicDataValidationError && (
+            <div>
+              <p>Data validation failed:</p>
+              <ul style={{ textAlign: 'left', fontSize: '14px', lineHeight: '1.6' }}>
+                {!validatedStakingSettings.success && <li>Staking Settings</li>}
+                {!validatedLpTokenInfo.success && <li>LP Token Info</li>}
+                {!validatedRewardTokenInfo.success && <li>Reward Token Info</li>}
+                {!validatedPoolInfo.success && <li>Pool Info</li>}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     );

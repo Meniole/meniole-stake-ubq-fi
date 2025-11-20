@@ -27,11 +27,14 @@ export const supportedChains: readonly [Chain, ...Chain[]] = isLocalNode ? [main
 type ChainId = (typeof supportedChains)[number]["id"];
 type TransportsMap = Record<ChainId, Transport>;
 
+// Anvil doesn't support URLs like http://localhost:8545/31337
 const transports = supportedChains.reduce<TransportsMap>((acc, chain) => {
-  const rpcUrl = isLocalNode && chain.id === 31337 ? RPC_URL : `${RPC_URL}/${chain.id}`;
+  // In local-node mode, use raw RPC_URL without chain ID suffix for ALL chains
+  // In production/dev mode, append chain ID
+  const rpcUrl = isLocalNode ? RPC_URL : `${RPC_URL}/${chain.id}`;
 
   acc[chain.id as ChainId] = http(rpcUrl, {
-    batch: true,
+    batch: isLocalNode ? false : true,
   });
   return acc;
 }, {} as TransportsMap);
