@@ -62,6 +62,9 @@ export const wagmiAdapter = new WagmiAdapter({
   networks: [...supportedChains] as [AppKitNetwork, ...AppKitNetwork[]],
   projectId,
   ssr: false,
+  batch: {
+    multicall: false,
+  },
 });
 
 export const wagmiConfig = createConfig({
