@@ -71,18 +71,11 @@ export const useStaking = ({ poolId, address, lpTokenAddress, lpTokenDecimals, i
     setErrorMessage(message);
   };
 
-  const executeWrite = async (
-    config: Parameters<typeof writeContractAsync>[0]
-  ): Promise<void> => {
+  const executeWrite = async (config: Parameters<typeof writeContractAsync>[0]): Promise<void> => {
     clearMessages();
 
     try {
       const hash = await writeContractAsync(config);
-
-      if (!hash) {
-        throw new Error("Transaction hash not received");
-      }
-
       await handleSuccess(hash);
     } catch (error) {
       handleError(error);
