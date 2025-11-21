@@ -54,7 +54,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
     query: {
       retry: 3,
       retryDelay: 1000,
-    }
+    },
   });
 
   const poolInfo = useReadContract({
@@ -64,7 +64,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
     query: {
       retry: 3,
       retryDelay: 1000,
-    }
+    },
   });
 
   const lpTokenAddress = poolInfo.data?.lpToken as Address | undefined;
@@ -86,22 +86,17 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   });
 
   const publicDataErrors = [
-    stakingSettings.error && stakingSettings.fetchStatus === 'idle',
-    lpTokenInfo.error && lpTokenInfo.fetchStatus === 'idle',
-    rewardTokenInfo.error && rewardTokenInfo.fetchStatus === 'idle',
-    poolInfo.error && poolInfo.fetchStatus === 'idle',
+    stakingSettings.error && stakingSettings.fetchStatus === "idle",
+    lpTokenInfo.error && lpTokenInfo.fetchStatus === "idle",
+    rewardTokenInfo.error && rewardTokenInfo.fetchStatus === "idle",
+    poolInfo.error && poolInfo.fetchStatus === "idle",
   ];
 
-  const hasRealError = publicDataErrors.some(err => err);
+  const hasRealError = publicDataErrors.some((err) => err);
 
-  const isLoadingPublicData =
-    stakingSettings.isLoading ||
-    lpTokenInfo.isLoading ||
-    rewardTokenInfo.isLoading ||
-    poolInfo.isLoading;
+  const isLoadingPublicData = stakingSettings.isLoading || lpTokenInfo.isLoading || rewardTokenInfo.isLoading || poolInfo.isLoading;
 
-  const isLoadingUserData = isConnected &&
-    Object.values(staking.data).some((d) => d.isLoading);
+  const isLoadingUserData = isConnected && Object.values(staking.data).some((d) => d.isLoading);
 
   const isLoadingInitialData = isLoadingPublicData || isLoadingUserData;
 
@@ -122,20 +117,22 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   const validatedPoolInfo = PoolInfoSchema.safeParse(poolInfo.data);
 
   const publicDataValidationError =
-    !validatedStakingSettings.success ||
-    !validatedLpTokenInfo.success ||
-    !validatedRewardTokenInfo.success ||
-    !validatedPoolInfo.success;
+    !validatedStakingSettings.success || !validatedLpTokenInfo.success || !validatedRewardTokenInfo.success || !validatedPoolInfo.success;
 
-  let validatedUserInfo;
+  const validatedUserInfo =
+    isConnected && staking.data.userInfo.data !== undefined
+      ? UserInfoSchema.safeParse(staking.data.userInfo.data)
+      : { success: true as const, data: { amount: 0n } };
 
-  if (isConnected && staking.data.userInfo.data !== undefined) {
-    validatedUserInfo = UserInfoSchema.safeParse(staking.data.userInfo.data);
-  } else {
-    validatedUserInfo = {
-      success: true,
-      data: { amount: 0n }
-    };
+  if (!validatedUserInfo.success) {
+    return (
+      <div className="pool-container">
+        <div style={{ padding: "20px", color: "#ff6666" }}>
+          <h3 style={{ marginTop: 0 }}>Error Loading Pool Data</h3>
+          <p>User data validation failed. Please try again later.</p>
+        </div>
+      </div>
+    );
   }
 
   if (hasRealError || publicDataValidationError) {
@@ -147,7 +144,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
           {publicDataValidationError && (
             <div>
               <p>Data validation failed:</p>
-              <ul style={{ textAlign: 'left', fontSize: '14px', lineHeight: '1.6' }}>
+              <ul style={{ textAlign: "left", fontSize: "14px", lineHeight: "1.6" }}>
                 {!validatedStakingSettings.success && <li>Staking Settings</li>}
                 {!validatedLpTokenInfo.success && <li>LP Token Info</li>}
                 {!validatedRewardTokenInfo.success && <li>Reward Token Info</li>}
