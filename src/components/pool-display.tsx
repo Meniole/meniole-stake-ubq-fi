@@ -188,8 +188,19 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
         <div className="column-container">
           <div className="max-amount">
             Max:{" "}
-            <span className="clickable-amount" onClick={() => setStakeAmount(safeFormatUnits(staking.data.balance.data ?? 0n, lpToken.decimals))}>
-              {safeFormatUnits(staking.data.balance.data ?? 0n, lpToken.decimals)} {lpToken.symbol}
+            <span
+              className="clickable-amount"
+              onClick={() => {
+                if (staking.data.balance.data !== undefined) {
+                  setStakeAmount(safeFormatUnits(staking.data.balance.data, lpToken.decimals));
+                }
+              }}
+            >
+              {staking.data.balance.error
+                ? "Error loading balance"
+                : staking.data.balance.isLoading
+                  ? "Loading..."
+                  : `${safeFormatUnits(staking.data.balance.data ?? 0n, lpToken.decimals)} ${lpToken.symbol}`}
             </span>
           </div>
           <input type="text" pattern="\d*\.?\d*" placeholder="Amount" value={stakeAmount} onChange={(e) => setStakeAmount(e.target.value)} />
@@ -275,7 +286,13 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
       <div className="rewards-section">
         <div>
           Pending Rewards:{" "}
-          {staking.data.pendingRewards.data !== undefined ? Number(safeFormatUnits(staking.data.pendingRewards.data, rewardToken.decimals)).toFixed(2) : "-"}{" "}
+          {staking.data.pendingRewards.error
+            ? "Error loading rewards"
+            : staking.data.pendingRewards.isLoading
+              ? "Loading..."
+              : staking.data.pendingRewards.data !== undefined
+                ? Number(safeFormatUnits(staking.data.pendingRewards.data, rewardToken.decimals)).toFixed(2)
+                : "-"}{" "}
           {rewardToken.symbol}
         </div>
         <div>

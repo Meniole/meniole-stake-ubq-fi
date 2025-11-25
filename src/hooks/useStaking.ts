@@ -17,7 +17,6 @@ interface UseStakingParams {
 
 export const useStaking = ({ poolId, address, lpTokenAddress, lpTokenDecimals, isConnected, onTransactionComplete }: UseStakingParams) => {
   const validAddress = toValidAddress(address);
-  const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
   const { setErrorMessage, setSuccessMessage, clearMessages } = useStatusMessage();
 
@@ -71,48 +70,48 @@ export const useStaking = ({ poolId, address, lpTokenAddress, lpTokenDecimals, i
     setErrorMessage(message);
   };
 
-  const executeWrite = async (config: Parameters<typeof writeContractAsync>[0]): Promise<void> => {
+  const { writeContract } = useWriteContract({
+    mutation: {
+      onSuccess: handleSuccess,
+      onError: handleError,
+    },
+  });
+
+  const executeStake = (amount: string) => {
     clearMessages();
-
-    try {
-      const hash = await writeContractAsync(config);
-      await handleSuccess(hash);
-    } catch (error) {
-      handleError(error);
-      throw error;
-    }
-  };
-
-  const executeStake = async (amount: string): Promise<void> => {
-    await executeWrite({
+    writeContract({
       ...stakingContract,
       functionName: "stake",
       args: [poolId, parseUnits(amount, lpTokenDecimals)],
     });
   };
 
-  const executeUnstake = async (amount: string): Promise<void> => {
-    await executeWrite({
+  const executeUnstake = (amount: string) => {
+    clearMessages();
+    writeContract({
       ...stakingContract,
       functionName: "unstake",
       args: [poolId, parseUnits(amount, lpTokenDecimals)],
     });
   };
 
-  const executeClaim = async (): Promise<void> => {
-    await executeWrite({
+  const executeClaim = () => {
+    clearMessages();
+    writeContract({
       ...stakingContract,
       functionName: "unstake",
       args: [poolId, 0n],
     });
   };
 
-  const executeApprove = async (amount: string): Promise<void> => {
+  const executeApprove = (amount: string) => {
     if (!lpTokenAddress) {
-      throw new Error("LP token address not available");
+      setErrorMessage("LP token address not available");
+      return;
     }
 
-    await executeWrite({
+    clearMessages();
+    writeContract({
       abi: erc20Abi,
       address: lpTokenAddress,
       functionName: "approve",

@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useMemo } from "react";
+import { createContext, useContext, useReducer } from "react";
 
 type StatusMessage = {
   successMessage: string | null;
@@ -11,15 +11,10 @@ type StatusMessageActions = {
   clearMessages: () => void;
 };
 
-type StatusMessageAction =
-  | { type: "setSuccess"; message: string | null }
-  | { type: "setError"; message: string | null }
-  | { type: "clear" };
-
+type StatusMessageAction = { type: "setSuccess"; message: string | null } | { type: "setError"; message: string | null } | { type: "clear" };
 
 const StatusMessageStateContext = createContext<StatusMessage | null>(null);
 const StatusMessageActionsContext = createContext<StatusMessageActions | null>(null);
-
 
 export const useStatusMessageState = () => {
   const context = useContext(StatusMessageStateContext);
@@ -37,7 +32,6 @@ export const useStatusMessageActions = () => {
   return context;
 };
 
-
 export const useStatusMessage = () => {
   return {
     ...useStatusMessageState(),
@@ -51,23 +45,15 @@ export function StatusMessageProvider({ children }: { children: React.ReactNode 
     errorMessage: null,
   });
 
-  const actions = useMemo(
-    () => ({
-      setSuccessMessage: (msg: string | null) =>
-        dispatch({ type: "setSuccess", message: msg }),
-      setErrorMessage: (msg: string | null) =>
-        dispatch({ type: "setError", message: msg }),
-      clearMessages: () =>
-        dispatch({ type: "clear" }),
-    }),
-    [] 
-  );
+  const actions = {
+    setSuccessMessage: (msg: string | null) => dispatch({ type: "setSuccess", message: msg }),
+    setErrorMessage: (msg: string | null) => dispatch({ type: "setError", message: msg }),
+    clearMessages: () => dispatch({ type: "clear" }),
+  };
 
   return (
     <StatusMessageActionsContext.Provider value={actions}>
-      <StatusMessageStateContext.Provider value={state}>
-        {children}
-      </StatusMessageStateContext.Provider>
+      <StatusMessageStateContext.Provider value={state}>{children}</StatusMessageStateContext.Provider>
     </StatusMessageActionsContext.Provider>
   );
 }
@@ -81,6 +67,6 @@ function statusMessageReducer(state: StatusMessage, action: StatusMessageAction)
     case "clear":
       return { successMessage: null, errorMessage: null };
     default:
-      return state; 
+      return state;
   }
 }
