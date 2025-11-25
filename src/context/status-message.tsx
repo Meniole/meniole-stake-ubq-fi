@@ -1,20 +1,14 @@
-import { createContext, useContext, useReducer } from "react";
+import { createContext, useContext, useReducer, type Dispatch } from "react";
 
 type StatusMessage = {
   successMessage: string | null;
   errorMessage: string | null;
 };
 
-type StatusMessageActions = {
-  setSuccessMessage: (msg: string | null) => void;
-  setErrorMessage: (msg: string | null) => void;
-  clearMessages: () => void;
-};
-
 type StatusMessageAction = { type: "setSuccess"; message: string | null } | { type: "setError"; message: string | null } | { type: "clear" };
 
 const StatusMessageStateContext = createContext<StatusMessage | null>(null);
-const StatusMessageActionsContext = createContext<StatusMessageActions | null>(null);
+const StatusMessageDispatchContext = createContext<Dispatch<StatusMessageAction> | null>(null);
 
 export const useStatusMessageState = () => {
   const context = useContext(StatusMessageStateContext);
@@ -24,18 +18,23 @@ export const useStatusMessageState = () => {
   return context;
 };
 
-export const useStatusMessageActions = () => {
-  const context = useContext(StatusMessageActionsContext);
+export const useStatusMessageDispatch = () => {
+  const context = useContext(StatusMessageDispatchContext);
   if (!context) {
-    throw new Error("useStatusMessageActions must be used within StatusMessageProvider");
+    throw new Error("useStatusMessageDispatch must be used within StatusMessageProvider");
   }
   return context;
 };
 
 export const useStatusMessage = () => {
+  const state = useStatusMessageState();
+  const dispatch = useStatusMessageDispatch();
+
   return {
-    ...useStatusMessageState(),
-    ...useStatusMessageActions(),
+    ...state,
+    setSuccessMessage: (msg: string | null) => dispatch({ type: "setSuccess", message: msg }),
+    setErrorMessage: (msg: string | null) => dispatch({ type: "setError", message: msg }),
+    clearMessages: () => dispatch({ type: "clear" }),
   };
 };
 
@@ -45,16 +44,10 @@ export function StatusMessageProvider({ children }: { children: React.ReactNode 
     errorMessage: null,
   });
 
-  const actions = {
-    setSuccessMessage: (msg: string | null) => dispatch({ type: "setSuccess", message: msg }),
-    setErrorMessage: (msg: string | null) => dispatch({ type: "setError", message: msg }),
-    clearMessages: () => dispatch({ type: "clear" }),
-  };
-
   return (
-    <StatusMessageActionsContext.Provider value={actions}>
+    <StatusMessageDispatchContext.Provider value={dispatch}>
       <StatusMessageStateContext.Provider value={state}>{children}</StatusMessageStateContext.Provider>
-    </StatusMessageActionsContext.Provider>
+    </StatusMessageDispatchContext.Provider>
   );
 }
 

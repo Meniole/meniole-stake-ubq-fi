@@ -80,6 +80,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
     lpTokenDecimals: lpTokenInfo.data?.decimals ?? 18,
     isConnected,
     onTransactionComplete: () => {
+      setCurrentWriteAction(WRITE_ACTION.NONE);
       poolInfo.refetch();
       staking.refetchAll();
     },
@@ -216,13 +217,9 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
               parsedStakeAmount <= 0 ||
               parsedStakeAmount > staking.data.balance.data
             }
-            onClick={async () => {
+            onClick={() => {
               setCurrentWriteAction(WRITE_ACTION.APPROVE);
-              try {
-                await staking.actions.executeApprove(stakeAmount);
-              } finally {
-                setCurrentWriteAction(WRITE_ACTION.NONE);
-              }
+              staking.actions.executeApprove(stakeAmount);
             }}
             isLoading={currentWriteAction === WRITE_ACTION.APPROVE}
             isLoadingText="Approving..."
@@ -241,13 +238,9 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
               parsedStakeAmount <= 0 ||
               parsedStakeAmount > staking.data.balance.data
             }
-            onClick={async () => {
+            onClick={() => {
               setCurrentWriteAction(WRITE_ACTION.STAKE);
-              try {
-                await staking.actions.executeStake(stakeAmount);
-              } finally {
-                setCurrentWriteAction(WRITE_ACTION.NONE);
-              }
+              staking.actions.executeStake(stakeAmount);
             }}
             isLoading={currentWriteAction === WRITE_ACTION.STAKE}
             isLoadingText="Staking..."
@@ -267,13 +260,9 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
           <Button
             className="action-button"
             disabled={isWritingContract || !isConnected || !parsedUnstakeAmount || parsedUnstakeAmount <= 0 || parsedUnstakeAmount > userInfo.amount}
-            onClick={async () => {
+            onClick={() => {
               setCurrentWriteAction(WRITE_ACTION.UNSTAKE);
-              try {
-                await staking.actions.executeUnstake(unstakeAmount);
-              } finally {
-                setCurrentWriteAction(WRITE_ACTION.NONE);
-              }
+              staking.actions.executeUnstake(unstakeAmount);
             }}
             isLoading={currentWriteAction === WRITE_ACTION.UNSTAKE}
             isLoadingText="Unstaking..."
@@ -300,13 +289,9 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
         </div>
         <Button
           className="action-button"
-          onClick={async () => {
+          onClick={() => {
             setCurrentWriteAction(WRITE_ACTION.CLAIM);
-            try {
-              await staking.actions.executeClaim();
-            } finally {
-              setCurrentWriteAction(WRITE_ACTION.NONE);
-            }
+            staking.actions.executeClaim();
           }}
           isLoading={currentWriteAction === WRITE_ACTION.CLAIM}
           isLoadingText="Claiming rewards..."
