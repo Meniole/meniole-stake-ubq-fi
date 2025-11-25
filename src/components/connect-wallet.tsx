@@ -3,19 +3,19 @@ import { useAppKit, useAppKitAccount, useAppKitNetwork, useDisconnect } from "@r
 import { supportedChains } from "../wallet/config";
 import { ICONS } from "./iconography";
 import { formatWalletAddress, getChainName } from "../utils";
-import { useStatusMessageDispatch } from "../context/status-message";
+import { useStatusMessage } from "../context/status-message";
 import { Button } from "./button";
 
 export function ConnectWalletButton() {
   const { open } = useAppKit();
   const { address, isConnected, status } = useAppKitAccount();
   const { chainId } = useAppKitNetwork();
-  const dispatch = useStatusMessageDispatch();
+  const { clearMessages } = useStatusMessage();
   const { disconnect } = useDisconnect();
 
   useEffect(() => {
-    dispatch({ type: "clear" });
-  }, [isConnected, chainId, dispatch]);
+    clearMessages();
+  }, [isConnected, chainId, clearMessages]);
 
   const normalizedChainId = typeof chainId === "string" ? parseInt(chainId, 10) : chainId;
   const isConnecting = status === "connecting";
@@ -27,7 +27,7 @@ export function ConnectWalletButton() {
           onClick={async () => {
             try {
               await disconnect();
-              dispatch({ type: "clear" });
+              clearMessages();
             } catch (error) {
               console.error("Failed to disconnect:", error);
             }
