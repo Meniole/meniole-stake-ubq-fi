@@ -1,28 +1,10 @@
 import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
-import { mainnet, type Chain } from "viem/chains";
+import { mainnet, anvil, type Chain } from "viem/chains";
 import { isLocalNode, RPC_URL } from "../constants/config";
-import { http, createConfig, type Transport } from "wagmi";
-import { injected } from "wagmi/connectors";
-import type { AppKitNetwork } from "@reown/appkit/networks";
+import { http, injected, type Transport } from "wagmi";
 
-const anvilChain = {
-  id: 31337,
-  name: "Anvil",
-  nativeCurrency: {
-    decimals: 18,
-    name: "Ether",
-    symbol: "ETH",
-  },
-  rpcUrls: {
-    default: {
-      http: [RPC_URL],
-    },
-  },
-  testnet: true,
-} as const satisfies Chain;
-
-export const supportedChains: readonly [Chain, ...Chain[]] = isLocalNode ? [mainnet, anvilChain] : [mainnet];
+export const supportedChains: readonly [Chain, ...Chain[]] = isLocalNode ? [mainnet, anvil] : [mainnet];
 
 type ChainId = (typeof supportedChains)[number]["id"];
 type TransportsMap = Record<ChainId, Transport>;
@@ -33,7 +15,7 @@ const transports = supportedChains.reduce<TransportsMap>((acc, chain) => {
   // In production/dev mode, append chain ID
   const rpcUrl = isLocalNode ? RPC_URL : `${RPC_URL}/${chain.id}`;
 
-  acc[chain.id as ChainId] = http(rpcUrl, {
+  acc[chain.id] = http(rpcUrl, {
     batch: isLocalNode ? false : true,
   });
   return acc;
@@ -59,24 +41,18 @@ const metadata = {
 };
 
 export const wagmiAdapter = new WagmiAdapter({
-  networks: [...supportedChains] as [AppKitNetwork, ...AppKitNetwork[]],
+  networks: [...supportedChains],
   projectId,
-  ssr: false,
-  batch: {
-    multicall: false,
-  },
-});
-
-export const wagmiConfig = createConfig({
-  chains: supportedChains,
-  connectors: [injected()],
   transports,
-  ssr: false,
+  connectors: [injected()],
+  batch: {
+    multicall: false, // Disabled because rpc.ubq.fi already uses multicall
+  },
 });
 
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: supportedChains as [AppKitNetwork, ...AppKitNetwork[]],
+  networks: [...supportedChains],
   projectId,
   metadata,
   features: {

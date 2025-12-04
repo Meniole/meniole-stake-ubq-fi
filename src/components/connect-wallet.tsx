@@ -3,19 +3,28 @@ import { useAppKit, useAppKitAccount, useAppKitNetwork, useDisconnect } from "@r
 import { supportedChains } from "../wallet/config";
 import { ICONS } from "./iconography";
 import { formatWalletAddress, getChainName } from "../utils";
-import { useStatusMessage } from "../context/status-message";
+import { useStatusMessageDispatch } from "../context/status-message";
 import { Button } from "./button";
 
 export function ConnectWalletButton() {
   const { open } = useAppKit();
   const { address, isConnected, status } = useAppKitAccount();
   const { chainId } = useAppKitNetwork();
-  const { clearMessages } = useStatusMessage();
+  const dispatchStatusMessage = useStatusMessageDispatch();
   const { disconnect } = useDisconnect();
 
   useEffect(() => {
-    clearMessages();
-  }, [isConnected, chainId, clearMessages]);
+    dispatchStatusMessage({ type: "clear" });
+  }, [isConnected, chainId, dispatchStatusMessage]);
+
+  const disconnectWallet = async () => {
+    try {
+      await disconnect();
+      dispatchStatusMessage({ type: "clear" });
+    } catch (error) {
+      console.error("Failed to disconnect:", error);
+    }
+  };
 
   const normalizedChainId = typeof chainId === "string" ? parseInt(chainId, 10) : chainId;
   const isConnecting = status === "connecting";
@@ -23,22 +32,15 @@ export function ConnectWalletButton() {
   if (isConnected && address) {
     return (
       <div className="wallet-connect-container">
-        <Button
-          onClick={async () => {
-            try {
-              await disconnect();
-              clearMessages();
-            } catch (error) {
-              console.error("Failed to disconnect:", error);
-            }
-          }}
-          className="wallet-button wallet-button--connected"
-          id="disconnect"
-          title="Click to disconnect wallet"
-        >
+        <Button onClick={disconnectWallet} className="wallet-button wallet-button--connected" id="disconnect" title="Click to disconnect wallet">
           {ICONS.DISCONNECT}
           <span>
-            {formatWalletAddress(address)} ({getChainName(normalizedChainId, supportedChains)})
+            {formatWalletAddress(address)} (
+            {getChainName(
+              normalizedChainId,
+              supportedChains.map((c) => ({ id: c.id, name: c.name }))
+            )}
+            )
           </span>
         </Button>
       </div>

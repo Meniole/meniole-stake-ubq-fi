@@ -1,16 +1,16 @@
 import { useAppKitAccount, useAppKitNetwork } from "@reown/appkit/react";
 import { ICONS } from "./iconography.tsx";
 import { PoolDisplay } from "./pool-display.tsx";
-import { useStatusMessage } from "../context/status-message.tsx";
 import { ConnectWalletButton } from "./connect-wallet.tsx";
 import { supportedChains } from "../wallet/config.ts";
+import { useStatusMessageState } from "../context/status-message.tsx";
 
 const LogoSpan = () => <span id="header-logo-wrapper">{ICONS.DAO_LOGO}</span>;
 
 export function DashboardPage() {
   const { isConnected } = useAppKitAccount();
   const { chainId } = useAppKitNetwork();
-  const { successMessage, errorMessage } = useStatusMessage();
+  const { successMessage, errorMessage } = useStatusMessageState();
 
   const isUnsupportedChain = isConnected && chainId && !supportedChains.some((c) => c.id === chainId);
 

@@ -51,20 +51,12 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
     ...stakingContract,
     functionName: "getStakingSettings",
     args: [],
-    query: {
-      retry: 3,
-      retryDelay: 1000,
-    },
   });
 
   const poolInfo = useReadContract({
     ...stakingContract,
     functionName: "getStakingPoolInfo",
     args: [poolId],
-    query: {
-      retry: 3,
-      retryDelay: 1000,
-    },
   });
 
   const lpTokenAddress = poolInfo.data?.lpToken as Address | undefined;
@@ -75,9 +67,8 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
 
   const staking = useStaking({
     poolId,
-    address,
-    lpTokenAddress,
-    lpTokenDecimals: lpTokenInfo.data?.decimals ?? 18,
+    userAddress: address,
+    lpToken: lpTokenInfo.data,
     isConnected,
     onTransactionComplete: () => {
       setCurrentWriteAction(WRITE_ACTION.NONE);
@@ -116,25 +107,10 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   const validatedLpTokenInfo = TokenInfoSchema.safeParse(lpTokenInfo.data);
   const validatedRewardTokenInfo = TokenInfoSchema.safeParse(rewardTokenInfo.data);
   const validatedPoolInfo = PoolInfoSchema.safeParse(poolInfo.data);
+  const validatedUserInfo = UserInfoSchema.safeParse(staking.data.userInfo.data);
 
   const publicDataValidationError =
     !validatedStakingSettings.success || !validatedLpTokenInfo.success || !validatedRewardTokenInfo.success || !validatedPoolInfo.success;
-
-  const validatedUserInfo =
-    isConnected && staking.data.userInfo.data !== undefined
-      ? UserInfoSchema.safeParse(staking.data.userInfo.data)
-      : { success: true as const, data: { amount: 0n } };
-
-  if (!validatedUserInfo.success) {
-    return (
-      <div className="pool-container">
-        <div style={{ padding: "20px", color: "#ff6666" }}>
-          <h3 style={{ marginTop: 0 }}>Error Loading Pool Data</h3>
-          <p>User data validation failed. Please try again later.</p>
-        </div>
-      </div>
-    );
-  }
 
   if (hasRealError || publicDataValidationError) {
     return (
@@ -170,7 +146,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
   const isAllowanceSufficient = staking.data.allowance.data !== undefined && parsedStakeAmount ? staking.data.allowance.data >= parsedStakeAmount : false;
 
   const poolRewardPerDay = calculatePoolRewardPerDay(settings[3], pool.allocationPoints, settings[6], rewardToken.decimals);
-  const userPoolShare = pool.amount > 0n ? calculateUserPoolShare(userInfo.amount, pool.amount, lpToken.decimals) : null;
+  const userPoolShare = userInfo && pool.amount > 0n ? calculateUserPoolShare(userInfo.amount, pool.amount, lpToken.decimals) : null;
   const userRewardPerDay = calculateUserRewardPerDay(userPoolShare, poolRewardPerDay);
   const isWritingContract = currentWriteAction !== WRITE_ACTION.NONE;
 
@@ -181,7 +157,7 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
         Total Staked: {safeFormatUnits(pool.amount, lpToken.decimals)} {lpToken.symbol}
       </div>
       <div>
-        Your Stake: {safeFormatUnits(userInfo.amount, lpToken.decimals)} {lpToken.symbol}{" "}
+        Your Stake: {userInfo ? safeFormatUnits(userInfo.amount, lpToken.decimals) : "-"} {lpToken.symbol}{" "}
         {userPoolShare && userPoolShare > 0.0001 ? `(${(userPoolShare * 100).toFixed(2)}% of pool)` : ""}
       </div>
 
@@ -252,14 +228,16 @@ export function PoolDisplay({ poolId = 0n }: PoolDisplayProps) {
         <div className="column-container">
           <div className="max-amount">
             Max:{" "}
-            <span className="clickable-amount" onClick={() => setUnstakeAmount(safeFormatUnits(userInfo.amount, lpToken.decimals))}>
-              {safeFormatUnits(userInfo.amount, lpToken.decimals)} {lpToken.symbol}
+            <span className="clickable-amount" onClick={() => setUnstakeAmount(safeFormatUnits(userInfo?.amount, lpToken.decimals))}>
+              {safeFormatUnits(userInfo?.amount, lpToken.decimals)} {lpToken.symbol}
             </span>
           </div>
           <input type="text" pattern="\d*\.?\d*" placeholder="Amount" value={unstakeAmount} onChange={(e) => setUnstakeAmount(e.target.value)} />
           <Button
             className="action-button"
-            disabled={isWritingContract || !isConnected || !parsedUnstakeAmount || parsedUnstakeAmount <= 0 || parsedUnstakeAmount > userInfo.amount}
+            disabled={
+              isWritingContract || !isConnected || !parsedUnstakeAmount || parsedUnstakeAmount <= 0 || !userInfo || parsedUnstakeAmount > userInfo.amount
+            }
             onClick={() => {
               setCurrentWriteAction(WRITE_ACTION.UNSTAKE);
               staking.actions.executeUnstake(unstakeAmount);

@@ -26,18 +26,6 @@ export const useStatusMessageDispatch = () => {
   return context;
 };
 
-export const useStatusMessage = () => {
-  const state = useStatusMessageState();
-  const dispatch = useStatusMessageDispatch();
-
-  return {
-    ...state,
-    setSuccessMessage: (msg: string | null) => dispatch({ type: "setSuccess", message: msg }),
-    setErrorMessage: (msg: string | null) => dispatch({ type: "setError", message: msg }),
-    clearMessages: () => dispatch({ type: "clear" }),
-  };
-};
-
 export function StatusMessageProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(statusMessageReducer, {
     successMessage: null,
