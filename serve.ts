@@ -1,6 +1,7 @@
 import { serveDir } from "jsr:@std/http/file-server";
 
-const root = Deno.env.get("STATIC_DIR") ?? "static";
+// Default to the Vite output folder so we still serve assets even if STATIC_DIR is missing.
+const root = Deno.env.get("STATIC_DIR") ?? "dist";
 
 Deno.serve(async (req) => {
   const url = new URL(req.url);
