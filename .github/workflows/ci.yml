@@ -3,13 +3,6 @@ name: CI
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-      - development
-  pull_request:
-    branches:
-      - main
-      - development
 
 permissions:
   contents: read
@@ -87,6 +80,8 @@ jobs:
         with:
           name: dist
           path: dist
+      - name: Set project name
+        run: echo "PROJECT_NAME=$(echo '${{ github.event.repository.name }}' | sed 's/\./-/g')" >> $GITHUB_ENV
       - name: Install Deno
         uses: denoland/setup-deno@v2
         with:
@@ -94,6 +89,6 @@ jobs:
       - name: Upload to Deno Deploy
         uses: denoland/deployctl@v1
         with:
-          project: ${{ github.event.repository.name }}
+          project: ${{ env.PROJECT_NAME }}
           entrypoint: https://deno.land/std@0.217.0/http/file_server.ts
           root: dist
